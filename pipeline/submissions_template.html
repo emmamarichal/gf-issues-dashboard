@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Submissions to review</title>
+<style>
+:root{
+  --bg:#faf9f5;--panel:#ffffff;--ink:#1f1e1d;--muted:#6b6a65;--line:#e4e1d8;--soft:#f1efe8;
+  --accent:#2f6fde;--good:#1f7a4d;--warn:#a35a00;--bad:#b3261e;--chip:#eeece4;
+  --font:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1b19;--panel:#262522;--ink:#f0eee6;--muted:#a8a69e;--line:#3b3a36;--soft:#2f2e2a;
+  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#34332f;}}
+:root[data-theme="dark"]{--bg:#1c1b19;--panel:#262522;--ink:#f0eee6;--muted:#a8a69e;--line:#3b3a36;--soft:#2f2e2a;
+  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#34332f;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;font-weight:600;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;position:sticky;top:0;z-index:5;background:var(--bg);
+  padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:16px}
+.bar input[type=search],.bar select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bar label{display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.progress{font-variant-numeric:tabular-nums;font-weight:600}
+.banner{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 12px}
+.banner b{font-weight:600}
+.left{margin:6px 0 0;padding-left:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 18px;transition:opacity .25s}
+.card.done{opacity:.42}
+.card.done:hover{opacity:.8}
+.head{display:flex;gap:16px;align-items:flex-start}
+.score{flex:0 0 auto;width:74px;height:74px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--soft);border:1px solid var(--line)}
+.score b{font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.score span{font-size:11px;color:var(--muted)}
+.title{flex:1;min-width:0}
+.title h2{margin:0;font-size:19px;font-weight:600}
+.title h2 a{color:inherit;text-decoration:none}
+.title h2 a:hover{text-decoration:underline}
+.meta{color:var(--muted);font-size:13px;margin-top:2px}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.links a{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;text-decoration:none;color:var(--ink)}
+.links a:hover{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;background:var(--chip);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.chip.good{color:var(--good)}.chip.warn{color:var(--warn)}.chip.bad{color:var(--bad)}
+.spec{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:hidden;background:var(--bg)}
+.spec .l0{font-size:44px;line-height:1.15}
+.spec .l1{font-size:26px;line-height:1.25;word-break:break-all}
+.spec .l2{font-size:18px;line-height:1.4}
+.spec .note{font:12px var(--font);color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.spec input[type=range]{vertical-align:middle;width:140px}
+.spec .gridchars{font-size:22px;line-height:1.5;letter-spacing:.12em;word-break:break-all;margin-top:8px}
+.spec .nofont{font:13px var(--font);color:var(--muted)}
+.issueimg{max-width:100%;max-height:240px;border-radius:8px;border:1px solid var(--line);margin-top:8px;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;margin-top:14px}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.box h3{margin:0 0 6px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.box p{margin:4px 0}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.ok::before{content:"✓ ";color:var(--good);font-weight:700}
+.no::before{content:"✗ ";color:var(--bad);font-weight:700}
+ul.tight{margin:4px 0;padding-left:18px}
+ul.tight li{margin:1px 0}
+.small{font-size:12px;color:var(--muted)}
+code{font:12px ui-monospace,Menlo,monospace;background:var(--soft);padding:0 4px;border-radius:4px}
+blockquote{margin:6px 0;padding:4px 10px;border-left:3px solid var(--line);color:var(--muted);font-size:13px}
+table.breakdown{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.breakdown td{padding:3px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.breakdown td.n{text-align:right;white-space:nowrap;padding-left:8px}
+.todo{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.todo label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.todo .rule{flex-basis:100%;font-size:12px;color:var(--muted)}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--accent);font-size:13px}
+pre.draft{white-space:pre-wrap;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.45 var(--font);margin:8px 0}
+button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer}
+.err{color:var(--bad)}
+.footer{color:var(--muted);font-size:12px;margin-top:30px}
+.nav{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px;margin:0 0 14px;color:var(--muted)}
+.nav b{color:var(--ink);font-weight:600}
+.nav span{margin-left:auto}
+.card.gone{opacity:.42;border-style:dashed}
+.bar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
+.footer pre{white-space:pre-wrap;max-height:300px;overflow:auto;background:var(--soft);padding:10px;border-radius:8px}
+@media (max-width:640px){.head{flex-direction:column}.spec .l0{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" id="nav" hidden><a href="./">Issue triage</a><b>Submissions to review</b><span id="upd"></span></nav>
+  <h1>Submissions to review</h1>
+  <p class="sub" id="sub"></p>
+  <div id="banners"></div>
+  <div class="bar">
+    <span class="progress" id="progress"></span>
+    <input type="search" id="q" placeholder="Filter (name, author, script…)" aria-label="Filter submissions">
+    <label>Sort <select id="sort"><option value="score">Score</option><option value="old">Oldest first</option><option value="new">Newest first</option></select></label>
+    <label><input type="checkbox" id="hideDone"> Hide treated</label>
+    <button type="button" id="resetTicks" hidden>Reset ticks</button>
+  </div>
+  <div id="cards"></div>
+  <div class="footer" id="footer"></div>
+</div>
+<script id="data" type="application/json">/*__DATA__*/null</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const state = {};             // per-issue: {todo:[bool x5], originality:null|0..5}
+const STORE = 'gf-submissions-v1';
+function loadStore() { if (!DATA.meta.hosted) return {}; try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { return {}; } }
+function saveStore() { if (!DATA.meta.hosted) return; try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage unavailable */ } }
+const LIVE = {};              // issue number -> reason it left the queue since the build
+const TODO = ['Decision taken (Accepted label added, or closing comment)', 'Comment posted (information missing)',
+              'Assigned', 'Milestone set', 'Priority set'];
+
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return e;
+}
+const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null;
+const link = (href, text) => safeUrl(href) ? el('a', {href, target: '_blank', rel: 'noopener'}, text) : document.createTextNode(text);
+const daysSince = (d) => d ? Math.round((Date.now() - new Date(d + 'T00:00:00Z')) / 864e5) : null;
+const age = (d) => { const n = daysSince(d); if (n == null) return ''; if (n < 60) return n + ' days'; if (n < 730) return Math.round(n / 30) + ' months'; return (n / 365).toFixed(1) + ' years'; };
+const chip = (text, cls) => el('span', {class: 'chip ' + (cls || ''), text});
+const yesno = (ok, text) => el('span', {class: ok ? 'ok' : 'no', text});
+const kv = (pairs) => el('dl', {class: 'kv'}, pairs.filter(Boolean).flatMap(([k, v]) => [el('dt', {text: k}), el('dd', {}, v)]));
+
+function totalScore(it) {
+  const s = state[it.number];
+  return it.score.auto + (s.originality == null ? 0 : s.originality * 2);
+}
+function isDone(it) {
+  if (LIVE[it.number]) return true;
+  const t = state[it.number].todo;
+  return (t[0] || t[1]) && t[2] && t[3] && t[4];
+}
+
+function specimen(it) {
+  const f = it.fonts || {};
+  const box = el('div', {class: 'spec'});
+  if (!f.specimen) {
+    box.append(el('div', {class: 'nofont', text: it.repo ? (it.repo_info ? 'No font binaries found in the repository.' : 'Repository could not be read.') : 'No repository link found in the issue.'}));
+  } else {
+    const fam = 'gfs-' + it.number;
+    const st = document.createElement('style');
+    st.textContent = `@font-face{font-family:"${fam}";src:url(${f.specimen.data});font-display:block}`;
+    document.head.append(st);
+    const lines = f.specimen.lines;
+    const wrap = el('div', {style: `font-family:"${fam}",var(--font)`});
+    lines.forEach((t, i) => wrap.append(el('div', {class: i === 0 ? 'l0' : (i < 3 ? 'l1' : 'l2'), text: t})));
+    const grid = el('div', {class: 'gridchars', hidden: true, style: `font-family:"${fam}",var(--font)`, text: f.specimen.grid});
+    wrap.append(grid);
+    box.append(wrap);
+    const note = el('div', {class: 'note'});
+    note.append(el('span', {text: `${f.primary} · ${f.glyph_count} glyphs · ${f.codepoints} characters`}));
+    if (f.sample_language) note.append(el('span', {text: 'Sample: ' + f.sample_language}));
+    (f.axes || []).slice(0, 3).forEach((a) => {
+      const r = el('input', {type: 'range', min: a.min, max: a.max, step: 'any', value: a.def, 'aria-label': a.tag});
+      const v = el('span', {text: `${a.tag} ${Math.round(a.def)}`});
+      r.addEventListener('input', () => {
+        v.textContent = `${a.tag} ${Math.round(r.value)}`;
+        const settings = [...note.querySelectorAll('input[type=range]')].map((x) => `"${x.getAttribute('aria-label')}" ${x.value}`).join(',');
+        wrap.style.fontVariationSettings = settings; grid.style.fontVariationSettings = settings;
+      });
+      note.append(el('label', {}, v, r));
+    });
+    note.append(el('button', {class: 'copy', onclick: () => { grid.hidden = !grid.hidden; }}, 'All characters'));
+    box.append(note);
+  }
+  if (safeUrl(it.issue_image)) {
+    const d = el('details', {}, el('summary', {text: 'Image attached to the issue'}),
+      el('img', {class: 'issueimg', src: it.issue_image, loading: 'lazy', referrerpolicy: 'no-referrer', alt: 'Image from the issue'}));
+    box.append(d);
+  }
+  return box;
+}
+
+function charsetBox(it) {
+  const f = it.fonts || {};
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Character set'}));
+  if (!f.glyphsets) return b.append(el('p', {class: 'small', text: 'No fonts analysed.'})), b;
+  const full = f.glyphsets.filter((g) => g[1] >= 99.9), part = f.glyphsets.filter((g) => g[1] < 99.9 && g[1] >= 80);
+  b.append(el('div', {class: 'chips'}, full.length ? full.map((g) => chip(g[0].replace('GF_', '').replace(/_/g, ' '), 'good')) : chip('No complete GF glyphset', 'bad')));
+  if (part.length) b.append(el('p', {class: 'small'}, 'Nearly complete: ' + part.map((g) => `${g[0].replace('GF_', '').replace(/_/g, ' ')} (${g[1]}%, ${g[2]} missing)`).join(', ')));
+  if (f.latin_core_missing && f.latin_core_missing.length) b.append(el('p', {}, el('span', {class: 'no', text: 'Latin Core missing: '}), el('code', {text: f.latin_core_missing.join(' ')})));
+  b.append(kv([
+    ['Languages', `${f.languages} supported (base exemplars)`],
+    ['By script', (f.languages_by_script || []).map(([s, n]) => `${s} ${n}`).join(' · ') || '—'],
+    ['Scripts in cmap', (f.scripts || []).join(', ') || '—'],
+    ['Styles', (f.styles || []).join(', ')],
+    f.axes && ['Axes', f.axes.map((a) => `${a.tag} ${a.min}–${a.max}`).join(', ')],
+    ['Version', f.version || '—'],
+  ]));
+  return b;
+}
+
+function sourcesBox(it) {
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Sources, repo & licence'}));
+  const r = it.repo, ri = it.repo_info;
+  if (!r) return b.append(el('p', {class: 'err', text: 'No repository URL found in the issue.'})), b;
+  if (!ri) return b.append(el('p', {class: 'err', text: 'Could not clone: ' + ((r.head || {}).error || 'unknown error')})), b;
+  const src = Object.entries(ri.sources || {});
+  b.append(src.length ? el('div', {class: 'chips'}, src.map(([k, v]) => chip(`${k} ×${v.count}`, v.points >= 12 ? 'good' : 'warn'))) : el('p', {class: 'no', text: 'No editable sources found'}));
+  const t = ri.template || {};
+  b.append(el('p', {class: 'small', style: 'margin:10px 0 2px', text: 'googlefonts-project-template'}),
+    el('div', {class: 'chips'}, Object.entries(t).map(([k, v]) => chip((v ? '✓ ' : '✗ ') + k, v ? 'good' : 'bad'))));
+  const lic = ri.license || {};
+  b.append(kv([
+    ['Licence', lic.file ? yesno(lic.ofl11, lic.ofl11 ? `SIL OFL 1.1 (${lic.file})` : `${lic.file}, not OFL 1.1`) : yesno(false, 'no licence file')],
+    ['RFN', lic.rfn && lic.rfn.length ? el('span', {class: 'no', text: lic.rfn.join(', ')}) : el('span', {class: 'ok', text: 'none declared'})],
+    lic.copyright && ['Copyright', lic.copyright],
+    ['Fonts', `${(ri.fonts || []).length} file(s) used${ri.all_fonts_count > (ri.fonts || []).length ? ` of ${ri.all_fonts_count} in repo` : ''}`],
+    ['Last commit', (r.head || {}).date ? `${r.head.date} — ${r.head.msg || ''}`.slice(0, 120) : '—'],
+    r.created && ['Repo created', `${r.created} (${age(r.created)} ago)${r.stars != null ? ` · ★ ${r.stars}` : ''}`],
+  ]));
+  return b;
+}
+
+function qaBox(it) {
+  const b = el('div', {class: 'box'}, el('h3', {text: 'QA (googlefonts profile)'}));
+  const q = it.qa;
+  if (!q) return b.append(el('p', {class: 'small', text: it.fonts ? 'Not run: neither fontspector nor fontbakery is installed.' : 'No fonts to check.'})), b;
+  b.append(kv([
+    ['Tool', q.tool],
+    ['Glyph coverage', q.glyph_coverage ? yesno(q.glyph_coverage === 'PASS', q.glyph_coverage) : '—'],
+    ['FAIL', String(q.fail.length)], ['ERROR', String(q.error.length)], ['WARN', String(q.warn_count)],
+  ]));
+  if (q.fail.length) b.append(el('ul', {class: 'tight small'}, q.fail.slice(0, 10).map((c) => el('li', {}, el('code', {text: c})))));
+  if (q.fail.length > 10) b.append(el('p', {class: 'small', text: `+ ${q.fail.length - 10} more`}));
+  return b;
+}
+
+function outlineBox(it) {
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Outline quality'}));
+  const o = (it.fonts || {}).outlines;
+  if (!o) return b.append(el('p', {class: 'small', text: 'No fonts analysed.'})), b;
+  const cls = o.score >= 80 ? 'good' : o.score >= 55 ? 'warn' : 'bad';
+  b.append(el('p', {}, chip(`${o.score}/100`, cls), o.pixel ? chip('pixel / grid font', '') : null));
+  b.append(kv([
+    ['Points per glyph', `${o.points_per_glyph}${o.lc_points != null ? ` (a–z: ${o.lc_points})` : ''}`],
+    ['Contours missing extrema', o.missing_extrema_pct + '%'],
+    ['Near-smooth kinks / glyph', String(o.kinks_per_glyph)],
+    ['Very short segments / glyph', String(o.short_segs_per_glyph)],
+    ['Glyphs checked', String(o.glyphs_checked)],
+  ]));
+  const ow = (it.qa || {}).outline_warns || [];
+  if (ow.length) b.append(el('p', {class: 'small'}, 'QA outline warnings: ', ow.map((c) => el('code', {text: c, style: 'margin-right:4px'}))));
+  if (!o.pixel && o.autotrace >= 2) b.append(el('p', {}, chip('Looks auto-traced', 'bad')));
+  return b;
+}
+
+function aiBox(it) {
+  const a = it.ai || {};
+  const b = el('div', {class: 'box'}, el('h3', {text: 'AI'}));
+  const cls = {'Disclosed AI use': 'warn', 'AI mentioned': 'warn', 'Several signals': 'bad', 'One signal': 'warn', 'States no AI used': 'good', 'No signal found': 'good'}[a.verdict];
+  b.append(el('p', {}, chip(a.verdict || '—', cls)));
+  if (a.disclosure) b.append(el('blockquote', {text: a.disclosure}));
+  (a.mentions || []).forEach((m) => b.append(el('blockquote', {text: m})));
+  if (a.reasons && a.reasons.length) b.append(el('ul', {class: 'tight small'}, a.reasons.map((r) => el('li', {text: r}))));
+  const tools = (it.fonts || {}).tools || [];
+  if (tools.length) b.append(el('p', {class: 'small', text: 'Tools in font names/tables: ' + tools.join(', ')}));
+  b.append(el('p', {class: 'small', text: 'Heuristic only: disclosure, wording, outline and account signals. Check the specimen yourself.'}));
+  return b;
+}
+
+function submitterBox(it) {
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Submitter'}));
+  const s = it.submitter;
+  b.append(el('p', {}, link('https://github.com/' + it.author, '@' + it.author), it.author_assoc && it.author_assoc !== 'NONE' ? ' · ' + it.author_assoc.toLowerCase() : ''));
+  if (!s) return b.append(el('p', {class: 'small', text: 'Profile not fetched (offline mode).'})), b;
+  const prev = (s.gf_items || []).filter((x) => x.number !== it.number);
+  const acc = prev.filter((x) => x.labels.some((l) => l === 'II Accepted' || l === '--- Live') || (x.is_pr && x.state === 'closed'));
+  b.append(kv([
+    ['GitHub account', s.created ? `${age(s.created)} old (since ${s.created})` : '—'],
+    ['Public repos · followers', `${s.public_repos ?? '—'} · ${s.followers ?? '—'}`],
+    s.type === 'Organization' && ['Type', 'Organization'],
+    s.company && ['Company', s.company],
+    s.blog && ['Website', link(/^https?:/.test(s.blog) ? s.blog : 'https://' + s.blog, s.blog)],
+    s.orgs && s.orgs.length && ['Orgs', s.orgs.join(', ')],
+    (it.repo || {}).owner_info && ['Repo owner', `${it.repo.owner_info.login} (organization, ${it.repo.owner_info.repos} repos)`],
+    ['google/fonts history', `${prev.length} other issue(s)/PR(s), ${acc.length} accepted or merged`],
+  ]));
+  if (prev.length) b.append(el('ul', {class: 'tight small'}, prev.slice(0, 6).map((x) => el('li', {}, link(x.url, `#${x.number} ${x.title}`), ` (${x.state}${x.labels.length ? ', ' + x.labels.filter((l) => /^II |^I |Live/.test(l)).join(', ') : ''})`))));
+  if (!prev.length && s.created && daysSince(s.created) < 90 && (s.public_repos || 0) <= 2) b.append(el('p', {}, chip('New to GitHub', 'warn')));
+  return b;
+}
+
+function scoreBox(it, rerender) {
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Score'}));
+  const t = el('table', {class: 'breakdown'});
+  it.score.parts.forEach(([name, pts, max, why]) => t.append(el('tr', {}, el('td', {}, name, el('div', {class: 'small', text: why})), el('td', {class: 'n', text: `${pts} / ${max}`}))));
+  const sel = el('select', {'aria-label': 'Originality'}, el('option', {value: '', text: 'not rated'}),
+    [0, 1, 2, 3, 4, 5].map((n) => el('option', {value: n, text: `${n} / 5`})));
+  sel.value = state[it.number].originality ?? '';
+  sel.addEventListener('change', () => { state[it.number].originality = sel.value === '' ? null : Number(sel.value); saveStore(); rerender(); });
+  t.append(el('tr', {}, el('td', {}, 'Design originality (your rating)', el('div', {class: 'small', text: 'Each point = 2'})), el('td', {class: 'n'}, sel)));
+  b.append(t);
+  if (it.derivative && it.derivative.length) b.append(el('p', {class: 'small'}, el('b', {text: 'Derivative / based-on mentions: '})),
+    ...it.derivative.map((d) => el('blockquote', {text: d})));
+  return b;
+}
+
+function card(it) {
+  const c = el('article', {class: 'card', id: 'issue-' + it.number});
+  const render = () => {
+    const sc = c.querySelector('.score b');
+    if (sc) sc.textContent = Math.round(totalScore(it));
+    c.classList.toggle('done', isDone(it));
+    updateProgress();
+  };
+  const days = daysSince(it.created);
+  const links = el('div', {class: 'links'}, link(it.url, `Issue #${it.number} ↗`), it.repo && link(it.repo.url, `${it.repo.owner}/${it.repo.name} ↗`),
+    it.bot && link(it.bot.url, 'Triage bot comment ↗'), it.last_comment && link(it.last_comment.url, `Last comment: ${it.last_comment.by}, ${it.last_comment.date} ↗`));
+  const chips = el('div', {class: 'chips'});
+  if (it.waiting_on) chips.append(chip('Waiting on ' + it.waiting_on, it.waiting_on === 'Google Fonts' ? 'warn' : ''));
+  if (it.checklist && it.checklist.total) chips.append(chip(`Checklist ${it.checklist.done}/${it.checklist.total}`, it.checklist.done === it.checklist.total ? 'good' : 'bad'));
+  (it.assignees || []).forEach((a) => chips.append(chip('Assigned: ' + a)));
+  (it.labels || []).filter((l) => l !== 'II Submission').forEach((l) => chips.append(chip(l)));
+  if (it.error) chips.append(chip('Analysis failed: ' + it.error, 'bad'));
+  (it.same_repo || []).forEach((n) => chips.append(el('span', {class: 'chip warn'}, 'Same repo as ', el('a', {href: '#issue-' + n, text: '#' + n}))));
+  c.append(el('div', {class: 'head'},
+    el('div', {class: 'score', title: 'Auto score /90 + originality /10'}, el('b', {text: Math.round(totalScore(it))}), el('span', {text: '/ 100'})),
+    el('div', {class: 'title'},
+      el('h2', {}, el('a', {href: safeUrl(it.url), target: '_blank', rel: 'noopener', text: it.title})),
+      el('div', {class: 'meta', text: `#${it.number} · opened ${it.created} (${days} days ago) by @${it.author} · ${it.comments_count ?? 0} comments`}),
+      links, chips)));
+  if (!it.error) {
+    c.append(specimen(it));
+    c.append(el('div', {class: 'grid'}, charsetBox(it), sourcesBox(it), qaBox(it), outlineBox(it), aiBox(it),
+      DATA.meta.show_submitter === false ? null : submitterBox(it), scoreBox(it, render)));
+  }
+  if (it.bot) c.append(el('details', {}, el('summary', {text: `Triage bot summary (${it.bot.date})`}), el('pre', {class: 'draft', text: it.bot.body})));
+  if (it.checklist && it.checklist.unchecked && it.checklist.unchecked.length)
+    c.append(el('details', {}, el('summary', {text: 'Unticked checklist items'}), el('ul', {class: 'tight small'}, it.checklist.unchecked.map((u) => el('li', {text: u})))));
+  if (it.draft_comment) {
+    const pre = el('pre', {class: 'draft', text: it.draft_comment});
+    const btn = el('button', {class: 'copy', onclick: async () => {
+      try { await navigator.clipboard.writeText(it.draft_comment); btn.textContent = 'Copied'; }
+      catch (e) { const r = document.createRange(); r.selectNodeContents(pre); getSelection().removeAllRanges(); getSelection().addRange(r); btn.textContent = 'Selected — press Ctrl/Cmd+C'; }
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    }}, 'Copy');
+    c.append(el('details', {}, el('summary', {text: 'Draft comment for missing information'}), pre, btn));
+  }
+  const todo = el('div', {class: 'todo'});
+  TODO.forEach((label, i) => {
+    const cb = el('input', {type: 'checkbox'});
+    cb.checked = state[it.number].todo[i];
+    cb.addEventListener('change', () => { state[it.number].todo[i] = cb.checked; saveStore(); render(); applyFilters(); });
+    todo.append(el('label', {}, cb, label));
+  });
+  todo.append(el('span', {class: 'rule', text: DATA.meta.hosted
+    ? 'The card fades once a decision or a comment is ticked, plus assigned, milestone and priority. Ticks are kept in this browser only.'
+    : 'The card fades once a decision or a comment is ticked, plus assigned, milestone and priority. Ticks are not saved: they reset when the report is regenerated.'}));
+  c.append(todo);
+  c._render = render;
+  return c;
+}
+
+// Live layer: ask GitHub (no token, 1–3 requests) which issues changed since the last full analysis.
+async function liveCheck(m) {
+  const box = el('div', {class: 'banner'}, el('b', {text: 'Live check: '}), 'looking for changes since the last full analysis…');
+  document.getElementById('banners').append(box);
+  const changed = [];
+  try {
+    for (let page = 1; page <= 3; page++) {
+      const r = await fetch(`https://api.github.com/repos/google/fonts/issues?state=all&since=${encodeURIComponent(m.generated_iso)}&per_page=100&page=${page}`,
+        {headers: {Accept: 'application/vnd.github+json'}});
+      if (!r.ok) throw new Error(r.status === 403 ? 'GitHub rate limit reached for this network, try again later' : 'HTTP ' + r.status);
+      const batch = await r.json();
+      changed.push(...batch.filter((x) => !x.pull_request));
+      if (batch.length < 100) break;
+    }
+  } catch (e) {
+    box.replaceChildren(el('b', {text: 'Live check unavailable: '}), String(e.message || e));
+    return;
+  }
+  const inList = new Set(DATA.items.map((it) => it.number));
+  const fresh = [];
+  for (const x of changed) {
+    const labels = (x.labels || []).map((l) => l.name);
+    const ms = (x.milestone || {}).title;
+    const stillIn = x.state === 'open' && labels.includes(m.label) && ms === m.milestone;
+    if (inList.has(x.number) && !stillIn) {
+      LIVE[x.number] = x.state === 'closed' ? 'closed' : labels.includes('II Accepted') ? 'accepted' : ms !== m.milestone ? 'moved to ' + (ms || 'no milestone') : 'label removed';
+    } else if (!inList.has(x.number) && stillIn) fresh.push(x);
+  }
+  for (const [n, why] of Object.entries(LIVE)) {
+    const c = nodes.get(Number(n));
+    if (!c) continue;
+    c.classList.add('gone');
+    c.querySelector('.chips').prepend(chip('Left the queue since the analysis: ' + why, 'good'));
+    c._render();
+  }
+  box.replaceChildren(el('b', {text: 'Live: '}),
+    `${Object.keys(LIVE).length} submission(s) left the queue and ${fresh.length} new one(s) arrived since the full analysis (${m.generated}). New ones get their card at the next hourly update.`);
+  if (fresh.length) box.append(el('ul', {class: 'left'}, fresh.map((x) => el('li', {}, link(x.html_url, `#${x.number} ${x.title}`), ` — by @${x.user.login}`))));
+  applyFilters();
+}
+
+const cardsEl = document.getElementById('cards');
+const nodes = new Map();
+function updateProgress() {
+  const n = DATA.items.filter(isDone).length;
+  document.getElementById('progress').textContent = `Treated ${n} / ${DATA.items.length}`;
+}
+function applyFilters() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const hide = document.getElementById('hideDone').checked;
+  for (const it of DATA.items) {
+    const hay = [it.title, it.author, it.number, ((it.fonts || {}).scripts || []).join(' '), ((it.repo || {}).name || '')].join(' ').toLowerCase();
+    nodes.get(it.number).hidden = (q && !hay.includes(q)) || (hide && isDone(it));
+  }
+}
+function sortCards() {
+  const how = document.getElementById('sort').value;
+  const items = DATA.items.slice().sort((a, b) => how === 'score' ? totalScore(b) - totalScore(a) : how === 'old' ? a.number - b.number : b.number - a.number);
+  items.forEach((it) => cardsEl.append(nodes.get(it.number)));
+}
+
+(function init() {
+  const m = DATA.meta;
+  document.getElementById('sub').append(`${m.count} open issues labelled “${m.label}” in the `,
+    safeUrl(m.milestone_url) ? link(m.milestone_url, `“${m.milestone}” milestone`) : `“${m.milestone}” milestone`,
+    ` · generated ${m.generated} · read-only, nothing was posted to GitHub`);
+  const ban = document.getElementById('banners');
+  if (m.offline) ban.append(el('div', {class: 'banner'}, el('b', {text: 'Offline mode: '}), 'issues come from an export file; comments, submitter profiles and repo metadata were not fetched.'));
+  if (m.previous) {
+    const box = el('div', {class: 'banner'}, el('b', {text: `Since the previous report (${m.previous}): `}),
+      `${m.left.length} left the list, ${m.new.length} new.`);
+    if (m.left.length) box.append(el('ul', {class: 'left'}, m.left.map((x) => el('li', {}, link(x.url, `#${x.number} ${x.title}`), ` — ${x.why}`))));
+    ban.append(box);
+  }
+  const saved = loadStore();
+  DATA.items.forEach((it) => {
+    const s = saved[it.number];
+    state[it.number] = s && Array.isArray(s.todo) && s.todo.length === 5 ? {todo: s.todo.map(Boolean), originality: s.originality ?? null}
+      : {todo: [false, false, false, false, false], originality: null};
+  });
+  if (m.hosted) {
+    document.getElementById('nav').hidden = false;
+    const upd = document.getElementById('upd');
+    upd.append(`Full analysis: ${m.generated}`);
+    if (safeUrl(m.update_url)) upd.append(' · ', link(m.update_url, 'Run an update now ↗'));
+    const rb = document.getElementById('resetTicks');
+    rb.hidden = false;
+    rb.addEventListener('click', () => {
+      DATA.items.forEach((it) => { state[it.number] = {todo: [false, false, false, false, false], originality: null}; });
+      saveStore(); location.reload();
+    });
+  }
+  DATA.items.forEach((it) => { const c = card(it); nodes.set(it.number, c); cardsEl.append(c); });
+  if (m.new && m.new.length) m.new.forEach((n) => { const c = nodes.get(n); if (c) c.querySelector('.chips').prepend(chip('New since last report', 'warn')); });
+  document.getElementById('q').addEventListener('input', applyFilters);
+  document.getElementById('hideDone').addEventListener('change', applyFilters);
+  document.getElementById('sort').addEventListener('change', sortCards);
+  updateProgress();
+  if (m.hosted && m.generated_iso) liveCheck(m);
+  document.getElementById('footer').append(el('details', {}, el('summary', {text: 'Generation log'}), el('pre', {text: (m.log || []).join('\n')})),
+    el('p', {text: 'Score: character set /25, QA /20, outlines /15, sources /15, licence & repo structure /5, submitter activity /10, originality /10 (your rating). All automatic parts are heuristics.'}));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Google Fonts issue triage</title>
+<meta name="description" content="Open google/fonts issues classified by type, feasibility and priority, with issues that could be closed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --font-anthropic-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-anthropic-serif: "Source Serif 4", Georgia, serif;
+  --cds-font-size-caption: 12px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 30px;
+  --cds-font-weight-medium: 600;
+  --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px;
+  --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 20px;
+  --cds-radius: 10px; --cds-dur-slow: .3s;
+  --color-fg: #1f1e1d; --color-fg-muted: #6b6a65; --color-bg: #fcfcfb; --color-panel: #ffffff;
+  --color-border-line: #e4e1d8; --color-bad: #b3261e;
+  --cds-chart-muted: #b8b5ad; --cds-chart-grid: #ecebe6; --cds-chart-axis: #c9c6bd; --cds-text-secondary: #6b6a65;
+  --cds-surface-popover: #ffffff; --cds-border: #e4e1d8; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.12);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --color-fg: #f0efec; --color-fg-muted: #a8a69e; --color-bg: #1a1a19; --color-panel: #242422;
+  --color-border-line: #3a3936; --color-bad: #ff8a80;
+  --cds-chart-muted: #5d5b55; --cds-chart-grid: #2f2e2b; --cds-chart-axis: #4a4945; --cds-text-secondary: #c3c2b7;
+  --cds-surface-popover: #2b2a28; --cds-border: #3a3936; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.5);
+} }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-fg: #f0efec; --color-fg-muted: #a8a69e; --color-bg: #1a1a19; --color-panel: #242422;
+  --color-border-line: #3a3936; --color-bad: #ff8a80;
+  --cds-chart-muted: #5d5b55; --cds-chart-grid: #2f2e2b; --cds-chart-axis: #4a4945; --cds-text-secondary: #c3c2b7;
+  --cds-surface-popover: #2b2a28; --cds-border: #3a3936; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.5);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+#dash-root { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+.dash-skeleton { color: transparent !important; background: var(--color-border-line); border-radius: 4px; }
+.site-nav { max-width: 1240px; margin: 0 auto; padding: 14px 16px 0; display: flex; gap: 16px; font: 13px var(--font-anthropic-sans); color: var(--color-fg-muted); }
+.site-nav a { color: var(--color-fg-muted); }
+.site-nav b { color: var(--color-fg); font-weight: 600; }
+.site-foot { max-width: 1240px; margin: 0 auto; padding: 0 16px 40px; font: 12px var(--font-anthropic-sans); color: var(--color-fg-muted); }
+.site-foot a { color: var(--color-fg-muted); }
+</style>
+<script src="assets/d3.v7.9.0.min.js"></script>
+<script src="assets/dash-shim.js"></script>
+</head>
+<body>
+<nav class="site-nav"><b>Issue triage</b><a href="submissions.html">Submissions to review</a></nav>
+<div id="dash-root">
+<style>
+#dash-root .gt-live { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); }
+#dash-root .gt-live b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+#dash-root .gt-live ul { margin: 4px 0 0; padding-left: 18px; }
+#dash-root .gt-live a, #dash-root .gt-gen-note a { color: var(--color-fg); }
+#dash-root .gt { font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+#dash-root .gt-titlebar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); align-items: center; justify-content: space-between; }
+#dash-root .gt-gen { display: inline-flex; align-items: center; gap: 6px; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); color: var(--color-bg); background: var(--color-fg); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); text-decoration: none; white-space: nowrap; }
+#dash-root .gt-gen:hover { opacity: .85; }
+#dash-root .gt-gen-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 0; text-align: right; }
+#dash-root .gt h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+#dash-root .gt-take { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: 0 0 var(--cds-gap-md); max-width: 60rem; line-height: 1.5; }
+#dash-root .gt-take b { font-weight: 600; color: var(--color-fg); font-variant-numeric: tabular-nums; }
+#dash-root .gt-tabs { display: flex; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); margin-bottom: var(--cds-gap-md); flex-wrap: wrap; }
+#dash-root .gt-tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); cursor: pointer; }
+#dash-root .gt-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+#dash-root .gt-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+#dash-root .gt-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+#dash-root .gt-tile-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+#dash-root .gt-tile-value { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin: var(--cds-gap-xs) 0; min-height: 1.3em; }
+#dash-root .gt-tile-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+#dash-root .gt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+#dash-root .gt-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+#dash-root .gt-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-sm); line-height: 1.45; }
+#dash-root .gt-chart { position: relative; min-height: 220px; }
+#dash-root .gt-chart text { font-family: var(--font-anthropic-sans); }
+#dash-root .gt-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-sm); }
+#dash-root .gt-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#dash-root .gt-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+#dash-root .gt-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+#dash-root .gt-tip .k { color: var(--cds-text-secondary); }
+#dash-root .gt-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; margin-bottom: var(--cds-gap-sm); }
+#dash-root .gt-chip { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+#dash-root .gt-chip[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+#dash-root .gt-search { font: inherit; font-size: var(--cds-font-size-caption); padding: 5px 10px; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 12rem; flex: 1 1 12rem; max-width: 22rem; }
+#dash-root .gt-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+#dash-root .gt-tablebox { max-height: 70vh; overflow: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+#dash-root .gt-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+#dash-root .gt-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); border-bottom: 1px solid var(--color-border-line); padding: 0; z-index: 1; }
+#dash-root .gt-table th button { font: inherit; background: none; border: 0; color: var(--color-fg); padding: 8px 10px; cursor: pointer; width: 100%; text-align: inherit; white-space: nowrap; }
+#dash-root .gt-table td { padding: 7px 10px; border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+#dash-root .gt-table td.num, #dash-root .gt-table th.num { text-align: right; }
+#dash-root .gt-table td.title { min-width: 16rem; max-width: 30rem; }
+#dash-root .gt-table td.wide { min-width: 14rem; max-width: 26rem; color: var(--color-fg-muted); }
+#dash-root .gt-table a { color: var(--color-fg); text-decoration: underline; text-decoration-color: var(--color-border-line); text-underline-offset: 2px; }
+#dash-root .gt-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); white-space: nowrap; border: 1px solid var(--color-border-line); }
+#dash-root .gt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+#dash-root .gt-fail { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); min-height: 200px; }
+#dash-root .gt-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+#dash-root [data-dash-source-state=empty] { color: transparent; }
+#dash-root [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (max-width: 720px) { #dash-root .gt-hide-narrow { display: none; } }
+</style>
+
+<div class="gt">
+  <div class="gt-titlebar">
+    <h1 id="top">google/fonts issues: triage and feasibility</h1>
+    <div id="gen">
+      <a class="gt-gen" href="submissions.html" target="_blank" rel="noopener">Generate submission to review report ↗</a>
+      <p class="gt-gen-note" id="gen-note">Updated every hour</p>
+    </div>
+  </div>
+  <p class="gt-take" id="takeaway"><b data-source="headline" data-field="open_issues" data-row="0" class="dash-skeleton">—</b> open issues, of which <b data-source="headline" data-field="font_bugs" data-row="0" class="dash-skeleton">—</b> are font bugs. <b data-source="headline" data-field="fixable_high" data-row="0" class="dash-skeleton">—</b> bugs look fixable with a simple script, and <b data-source="headline" data-field="close_likely" data-row="0" class="dash-skeleton">—</b> issues could probably be closed (<b data-source="headline" data-field="close_verify" data-row="0" class="dash-skeleton">—</b> more to verify).</p>
+
+  <div class="gt-live" id="live" hidden></div>
+  <div class="gt-tabs" role="tablist">
+    <button class="gt-tab" role="tab" id="tab-overview" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="gt-tab" role="tab" id="tab-bugs" data-tab="bugs" aria-selected="false">Font bugs</button>
+    <button class="gt-tab" role="tab" id="tab-close" data-tab="close" aria-selected="false">To close</button>
+  </div>
+
+  <section id="overview" class="gt-page">
+    <div class="gt-tiles">
+      <div class="gt-card" id="tile-open"><div class="gt-tile-label">Open issues</div><div class="gt-tile-value dash-skeleton" data-source="headline" data-field="open_issues" data-row="0">—</div><div class="gt-tile-note">Pull requests excluded</div></div>
+      <div class="gt-card" id="tile-bugs"><div class="gt-tile-label">Font bugs</div><div class="gt-tile-value dash-skeleton" data-source="headline" data-field="font_bugs" data-row="0">—</div><div class="gt-tile-note">Defects in shipped binaries</div></div>
+      <div class="gt-card" id="tile-fixable"><div class="gt-tile-label">High-feasibility bugs</div><div class="gt-tile-value dash-skeleton" data-source="headline" data-field="fixable_high" data-row="0">—</div><div class="gt-tile-note">Fixable by script, no design work</div></div>
+      <div class="gt-card" id="tile-close"><div class="gt-tile-label">Probably closable</div><div class="gt-tile-value dash-skeleton" data-source="headline" data-field="close_likely" data-row="0">—</div><div class="gt-tile-note">Evidence in the repo history</div></div>
+    </div>
+
+    <div class="gt-grid">
+      <div class="gt-card" id="card-cat">
+        <h2>Font bugs by problem type</h2>
+        <p class="gt-note">Each bar is split by feasibility: High = a scriptable fix on the binary, Low = needs design work or expertise, Blocked = waiting on upstream.</p>
+        <div class="gt-legend" id="legend-fix" data-source="bug_cat_fix"></div>
+        <div class="gt-chart" id="chart-cat" data-source="bug_cat_fix"></div>
+      </div>
+      <div class="gt-card" id="card-kind">
+        <h2>Open issues by kind</h2>
+        <p class="gt-note">Based on the repo's labels, completed by hand for unlabelled issues.</p>
+        <div class="gt-chart" id="chart-kind" data-source="by_kind"></div>
+      </div>
+    </div>
+    <div class="gt-card" id="card-year">
+      <h2>Issues still open, by year opened</h2>
+      <p class="gt-note">How old the backlog is: the oldest issues are the best candidates for a check or for closing.</p>
+      <div class="gt-chart" id="chart-year" data-source="by_year"></div>
+    </div>
+  </section>
+
+  <section id="bugs" class="gt-page" hidden>
+    <div class="gt-card" id="card-bugtable">
+      <h2>Font bugs, most to least feasible</h2>
+      <p class="gt-note">Default order: feasibility, then priority score (visible severity, reactions, comments, recent activity, milestone). The fontspector column summarises the googlefonts profile report on the family's current binaries (fontbakery 1.1 run offline, network checks excluded): No FAIL or Scriptable FAILs only = a hotfix can pass; Glyph fixes needed or Glyphset coverage incomplete = the family no longer meets current specs, so a hotfix alone will likely fail CI. Maybe fixed? shows Likely when the font has been updated since the issue was opened.</p>
+      <div class="gt-controls">
+        <span id="bug-filters"></span>
+        <input class="gt-search" id="bug-search" type="search" placeholder="Search (title, family, type)" aria-label="Search bugs">
+        <span class="gt-count" id="bug-count"></span>
+      </div>
+      <div class="gt-tablebox">
+        <table class="gt-table" id="bug-table" data-source="issues" data-row-key="number"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="close" class="gt-page" hidden>
+    <div class="gt-card" id="card-closetable">
+      <h2>Issues that could be closed</h2>
+      <p class="gt-note">Likely: the font the issue is about has been updated since the issue was opened, or the evidence is direct (font added, family removed, a commit that closes the issue, submission not meeting requirements). An update does not prove the problem is fixed, so check before closing. To verify: inactive for over 3 years with little interest, or a commit mentions the issue. Nothing is closed automatically.</p>
+      <div class="gt-controls">
+        <span id="close-filters"></span>
+        <input class="gt-search" id="close-search" type="search" placeholder="Search (title, reason, evidence)" aria-label="Search issues to close">
+        <span class="gt-count" id="close-count"></span>
+      </div>
+      <div class="gt-tablebox">
+        <table class="gt-table" id="close-table" data-source="close" data-row-key="id"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+window.FIX_ORDER = ['High', 'Medium', 'Low', 'Blocked'];
+
+dash.calc('headline', {
+  inputs: ['issues'],
+  title: 'Key figures',
+  description: 'Counts over the open issues: total, font bugs, high feasibility, closing candidates.',
+  fn: (issues) => [{
+    open_issues: issues.length,
+    font_bugs: issues.filter((r) => r.kind === 'Font bug').length,
+    fixable_high: issues.filter((r) => r.fixability === 'High').length,
+    close_likely: issues.filter((r) => r.close_status === 'Likely').length,
+    close_verify: issues.filter((r) => r.close_status === 'To verify').length,
+  }],
+});
+
+dash.calc('by_kind', {
+  inputs: ['issues'],
+  title: 'Issues by kind',
+  description: 'Number of open issues by kind (new font, bug, API…).',
+  fn: (issues) => {
+    const counts = {};
+    issues.forEach((r) => { counts[r.kind] = (counts[r.kind] || 0) + 1; });
+    return Object.entries(counts).map(([kind, n]) => ({ kind, n })).sort((a, b) => b.n - a.n);
+  },
+});
+
+dash.calc('bug_cat_fix', {
+  inputs: ['issues'],
+  title: 'Bugs by type and feasibility',
+  description: 'Font bugs counted by problem type and feasibility level.',
+  fn: (issues) => {
+    const counts = {};
+    issues.filter((r) => r.kind === 'Font bug').forEach((r) => {
+      const k = r.category + '\u0000' + r.fixability;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return Object.entries(counts).map(([k, n]) => ({ category: k.split('\u0000')[0], fixability: k.split('\u0000')[1], n }));
+  },
+});
+
+dash.calc('by_year', {
+  inputs: ['issues'],
+  title: 'Issues by year opened',
+  description: 'Number of issues still open, by year opened.',
+  fn: (issues) => {
+    const counts = {};
+    issues.forEach((r) => { counts[r.year_opened] = (counts[r.year_opened] || 0) + 1; });
+    return Object.entries(counts).map(([year, n]) => ({ year_opened: Number(year), n })).sort((a, b) => a.year_opened - b.year_opened);
+  },
+});
+
+window.gtState = { tab: 'overview', bugFix: 'All', bugQ: '', bugSort: null, closeConf: 'All', closeQ: '', closeSort: null };
+
+})();
+</script>
+
+<script>
+(() => {
+const FIX_ORDER = window.FIX_ORDER;
+const fmtN = d3.format(',');
+const fixColor = (f) => ({ 'High': dash.colors[0], 'Medium': dash.colors[1], 'Low': dash.colors[2] }[f] || 'var(--cds-chart-muted)');
+
+function failLine(el) {
+  el.replaceChildren();
+  const d = document.createElement('div');
+  d.className = 'gt-fail';
+  d.textContent = 'Failed to load';
+  el.appendChild(d);
+}
+
+function tooltip(box) {
+  let tip = box.querySelector('.gt-tip');
+  if (!tip) { tip = document.createElement('div'); tip.className = 'gt-tip'; tip.hidden = true; box.appendChild(tip); }
+  return {
+    show(event, lines) {
+      tip.replaceChildren(...lines.map(([k, v], i) => {
+        const div = document.createElement('div');
+        if (i === 0) { div.className = 'k'; div.textContent = k; } else { div.textContent = k + ': ' + v; }
+        return div;
+      }));
+      tip.hidden = false;
+      const r = box.getBoundingClientRect();
+      let x = event.clientX - r.left + 12, y = event.clientY - r.top + 12;
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      if (x + w > r.width) x = Math.max(0, event.clientX - r.left - w - 12);
+      if (y + h > r.height) y = Math.max(0, event.clientY - r.top - h - 12);
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    },
+    hide() { tip.hidden = true; },
+  };
+}
+
+function measure(svg, texts) {
+  const t = svg.append('text').attr('font-size', 12).attr('visibility', 'hidden');
+  let m = 0;
+  texts.forEach((s) => { t.text(s); m = Math.max(m, t.node().getComputedTextLength()); });
+  t.remove();
+  return m;
+}
+
+function hbar(box, rows, opts) {
+  box.querySelectorAll('svg').forEach((s) => s.remove());
+  const W = Math.max(280, box.clientWidth);
+  const barH = 22, gap = 8;
+  const svg = d3.select(box).append('svg').attr('width', '100%');
+  const labelW = Math.min(W * 0.48, measure(svg, rows.map((r) => r.label)) + 10);
+  const valW = measure(svg, rows.map((r) => fmtN(r.total))) + 10;
+  const H = rows.length * (barH + gap) + 4;
+  svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+  box.style.minHeight = H + 'px';
+  const x = d3.scaleLinear([0, d3.max(rows, (r) => r.total) || 1], [0, W - labelW - valW - 4]);
+  const tip = tooltip(box);
+  rows.forEach((r, i) => {
+    const y = i * (barH + gap);
+    const g = svg.append('g').attr('transform', `translate(0,${y})`);
+    g.append('text').attr('x', labelW - 8).attr('y', barH / 2).attr('dy', '0.35em').attr('text-anchor', 'end')
+      .attr('font-size', 12).attr('fill', 'var(--color-fg)').text(r.label);
+    let x0 = labelW;
+    r.parts.forEach((p) => {
+      const w = Math.max(0, x(p.n) - (r.parts.length > 1 ? 2 : 0));
+      g.append('rect').attr('x', x0).attr('y', 0).attr('width', w).attr('height', barH).attr('rx', 4)
+        .attr('fill', p.color)
+        .on('mousemove', (event) => tip.show(event, [[r.label], [p.name, fmtN(p.n)]].concat(r.parts.length > 1 ? [['Total', fmtN(r.total)]] : [])))
+        .on('mouseleave', () => tip.hide());
+      x0 += x(p.n);
+    });
+    g.append('text').attr('x', x0 + 6).attr('y', barH / 2).attr('dy', '0.35em').attr('font-size', 12)
+      .attr('fill', 'var(--color-fg-muted)').text(fmtN(r.total));
+  });
+}
+
+function drawKind() {
+  const box = document.getElementById('chart-kind');
+  const d = dash.data('by_kind');
+  if (d.status === 'error') return failLine(box);
+  if (d.status !== 'ok') { box.replaceChildren(); return; }
+  box.querySelectorAll('.gt-fail').forEach((e) => e.remove());
+  hbar(box, d.data.map((r) => ({ label: r.kind, total: r.n, parts: [{ name: 'Issues', n: r.n, color: dash.colors[0] }] })));
+}
+
+function drawCat() {
+  const box = document.getElementById('chart-cat');
+  const legend = document.getElementById('legend-fix');
+  const d = dash.data('bug_cat_fix');
+  if (d.status === 'error') { legend.replaceChildren(); return failLine(box); }
+  if (d.status !== 'ok') { box.replaceChildren(); legend.replaceChildren(); return; }
+  box.querySelectorAll('.gt-fail').forEach((e) => e.remove());
+  const present = FIX_ORDER.filter((f) => d.data.some((r) => r.fixability === f));
+  legend.replaceChildren(...present.map((f) => {
+    const s = document.createElement('span');
+    const i = document.createElement('i'); i.style.background = fixColor(f);
+    s.append(i, document.createTextNode(f));
+    return s;
+  }));
+  const rows = d3.rollups(d.data, (v) => v, (r) => r.category).map(([cat, v]) => ({
+    label: cat,
+    total: d3.sum(v, (r) => r.n),
+    rank: d3.sum(v.filter((r) => r.fixability === 'High' || r.fixability === 'Medium'), (r) => r.n),
+    parts: FIX_ORDER.map((f) => ({ name: f, n: d3.sum(v.filter((r) => r.fixability === f), (r) => r.n), color: fixColor(f) })).filter((p) => p.n > 0),
+  })).sort((a, b) => b.total - a.total);
+  hbar(box, rows);
+}
+
+function drawYear() {
+  const box = document.getElementById('chart-year');
+  const d = dash.data('by_year');
+  if (d.status === 'error') return failLine(box);
+  if (d.status !== 'ok') { box.replaceChildren(); return; }
+  box.querySelectorAll('.gt-fail').forEach((e) => e.remove());
+  box.querySelectorAll('svg').forEach((s) => s.remove());
+  const rows = d.data;
+  const W = Math.max(280, box.clientWidth), H = 220;
+  const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+  const y = d3.scaleLinear([0, d3.max(rows, (r) => r.n) || 1], [H - 24, 10]).nice();
+  const yW = measure(svg, y.ticks(4).map(fmtN)) + 8;
+  const x = d3.scaleBand(rows.map((r) => String(r.year_opened)), [yW, W]).padding(0.25);
+  svg.append('g').selectAll('line').data(y.ticks(4)).join('line')
+    .attr('x1', yW).attr('x2', W).attr('y1', (t) => y(t)).attr('y2', (t) => y(t))
+    .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+  svg.append('g').selectAll('text').data(y.ticks(4)).join('text')
+    .attr('x', yW - 6).attr('y', (t) => y(t)).attr('dy', '0.35em').attr('text-anchor', 'end')
+    .attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text(fmtN);
+  const tip = tooltip(box);
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => x(String(r.year_opened))).attr('width', x.bandwidth())
+    .attr('y', (r) => y(r.n)).attr('height', (r) => Math.max(0, y(0) - y(r.n))).attr('rx', 4)
+    .attr('fill', dash.colors[0])
+    .on('mousemove', (event, r) => tip.show(event, [[String(r.year_opened)], ['Open issues', fmtN(r.n)]]))
+    .on('mouseleave', () => tip.hide());
+  const step = Math.ceil(rows.length / Math.max(1, Math.floor((W - yW) / 44)));
+  svg.append('g').selectAll('text').data(rows.filter((r, i) => i % step === 0)).join('text')
+    .attr('x', (r) => x(String(r.year_opened)) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle')
+    .attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((r) => String(r.year_opened));
+  svg.append('line').attr('x1', yW).attr('x2', W).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+}
+
+window.gtCharts = { drawKind, drawCat, drawYear, fixColor };
+
+})();
+</script>
+
+<script>
+(() => {
+const FIX_ORDER = window.FIX_ORDER;
+const fmtNum = d3.format(',');
+const fmtDate = (s) => s ? d3.utcFormat('%b %-d, %Y')(new Date(s)) : '';
+
+function chips(holder, values, current, onPick) {
+  holder.replaceChildren(...values.map((v) => {
+    const b = document.createElement('button');
+    b.className = 'gt-chip'; b.type = 'button'; b.textContent = v;
+    b.setAttribute('aria-pressed', String(v === current));
+    b.addEventListener('click', () => onPick(v));
+    return b;
+  }));
+}
+
+function buildTable(table, cols, rows, sortState, onSort, keyCol) {
+  const thead = table.tHead, tbody = table.tBodies[0];
+  thead.replaceChildren();
+  const tr = thead.insertRow();
+  cols.forEach((c) => {
+    const th = document.createElement('th');
+    th.dataset.field = c.field;
+    if (c.num) th.className = 'num';
+    if (c.narrowHide) th.classList.add('gt-hide-narrow');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const active = sortState && sortState.field === c.field;
+    btn.textContent = c.label + (active ? (sortState.dir > 0 ? ' ↑' : ' ↓') : '');
+    th.setAttribute('aria-sort', active ? (sortState.dir > 0 ? 'ascending' : 'descending') : 'none');
+    btn.addEventListener('click', () => onSort(c.field));
+    th.appendChild(btn);
+    tr.appendChild(th);
+  });
+  tbody.replaceChildren(...rows.map((r) => {
+    const row = document.createElement('tr');
+    cols.forEach((c) => {
+      const td = document.createElement('td');
+      if (c.num) td.className = 'num';
+      if (c.cls) td.classList.add(c.cls);
+      if (c.narrowHide) td.classList.add('gt-hide-narrow');
+      const v = r[c.field];
+      if (c.render) c.render(td, r);
+      else td.textContent = v == null ? '' : (c.num ? fmtNum(v) : String(v));
+      row.appendChild(td);
+    });
+    return row;
+  }));
+}
+
+function sortRows(rows, sortState, defaultCmp) {
+  if (!sortState) return rows.slice().sort(defaultCmp);
+  const { field, dir } = sortState;
+  return rows.slice().sort((a, b) => {
+    const x = a[field], y = b[field];
+    if (x == null || x === '') return 1;
+    if (y == null || y === '') return -1;
+    return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'en')) * dir;
+  });
+}
+
+function linkCell(td, text, href) {
+  if (href) {
+    const a = document.createElement('a');
+    a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = text;
+    td.appendChild(a);
+  } else td.textContent = text;
+}
+
+function pillCell(td, text, color) {
+  if (!text) return;
+  const s = document.createElement('span');
+  s.className = 'gt-pill';
+  if (color) { const dot = document.createElement('span'); dot.className = 'gt-dot'; dot.style.background = color; s.appendChild(dot); }
+  s.appendChild(document.createTextNode(text));
+  td.appendChild(s);
+}
+
+function drawBugs() {
+  const st = window.gtState;
+  const table = document.getElementById('bug-table');
+  const d = dash.data('issues');
+  chips(document.getElementById('bug-filters'), ['All'].concat(FIX_ORDER), st.bugFix, (v) => { st.bugFix = v; drawBugs(); });
+  if (d.status !== 'ok') { table.tBodies[0].replaceChildren(); document.getElementById('bug-count').textContent = ''; return; }
+  const q = st.bugQ.trim().toLowerCase();
+  let rows = d.data.filter((r) => r.kind === 'Font bug' && (st.bugFix === 'All' || r.fixability === st.bugFix));
+  if (q) rows = rows.filter((r) => [r.title, r.family, r.category, String(r.number), r.labels].join(' ').toLowerCase().includes(q));
+  rows = sortRows(rows, st.bugSort, (a, b) => (FIX_ORDER.indexOf(a.fixability) - FIX_ORDER.indexOf(b.fixability)) || (b.priority_score - a.priority_score));
+  document.getElementById('bug-count').textContent = fmtNum(rows.length) + ' bugs';
+  const cols = [
+    { field: 'number', label: '#', num: true },
+    { field: 'title', label: 'Title', cls: 'title', render: (td, r) => linkCell(td, r.title, r.url) },
+    { field: 'family', label: 'Family' },
+    { field: 'category', label: 'Problem type' },
+    { field: 'fixability', label: 'Feasibility', render: (td, r) => pillCell(td, r.fixability, window.gtCharts.fixColor(r.fixability)) },
+    { field: 'spec_status', label: 'fontspector' },
+    { field: 'spec_fails', label: 'FAILs', num: true, narrowHide: true },
+    { field: 'priority', label: 'Priority' },
+    { field: 'priority_score', label: 'Score', num: true, narrowHide: true },
+    { field: 'reactions', label: 'Reactions', num: true, narrowHide: true },
+    { field: 'comments', label: 'Comments', num: true, narrowHide: true },
+    { field: 'close_status', label: 'Maybe fixed?', narrowHide: true },
+    { field: 'last_activity', label: 'Last activity', narrowHide: true },
+    { field: 'fix_notes', label: 'Notes', cls: 'wide', narrowHide: true },
+  ];
+  buildTable(table, cols, rows, st.bugSort, (f) => {
+    st.bugSort = st.bugSort && st.bugSort.field === f ? { field: f, dir: -st.bugSort.dir } : { field: f, dir: ['priority_score', 'reactions', 'comments', 'spec_fails'].includes(f) ? -1 : 1 };
+    drawBugs();
+  });
+}
+
+function drawClose() {
+  const st = window.gtState;
+  const table = document.getElementById('close-table');
+  const d = dash.data('close');
+  chips(document.getElementById('close-filters'), ['All', 'Likely', 'To verify'], st.closeConf, (v) => { st.closeConf = v; drawClose(); });
+  if (d.status !== 'ok') { table.tBodies[0].replaceChildren(); document.getElementById('close-count').textContent = ''; return; }
+  const q = st.closeQ.trim().toLowerCase();
+  let rows = d.data.filter((r) => st.closeConf === 'All' || r.confidence === st.closeConf);
+  if (q) rows = rows.filter((r) => [r.title, r.reason, r.evidence, r.kind, String(r.number)].join(' ').toLowerCase().includes(q));
+  rows = sortRows(rows, st.closeSort, (a, b) => (a.confidence === b.confidence ? 0 : a.confidence === 'Likely' ? -1 : 1) || a.reason.localeCompare(b.reason, 'en') || a.number - b.number);
+  document.getElementById('close-count').textContent = fmtNum(new Set(rows.map((r) => r.number)).size) + ' issues';
+  const cols = [
+    { field: 'id', label: 'Ref.', narrowHide: true },
+    { field: 'number', label: '#', num: true },
+    { field: 'title', label: 'Title', cls: 'title', render: (td, r) => linkCell(td, r.title, r.url) },
+    { field: 'confidence', label: 'Confidence', render: (td, r) => pillCell(td, r.confidence, r.confidence === 'Likely' ? dash.colors[0] : 'var(--cds-chart-muted)') },
+    { field: 'reason', label: 'Reason' },
+    { field: 'evidence', label: 'Evidence', cls: 'wide', render: (td, r) => linkCell(td, r.evidence, r.commit) },
+    { field: 'kind', label: 'Kind', narrowHide: true },
+    { field: 'last_activity', label: 'Last activity', narrowHide: true },
+  ];
+  buildTable(table, cols, rows, st.closeSort, (f) => {
+    st.closeSort = st.closeSort && st.closeSort.field === f ? { field: f, dir: -st.closeSort.dir } : { field: f, dir: 1 };
+    drawClose();
+  });
+}
+
+function fillHeadline() {
+  const d = dash.data('headline');
+  document.querySelectorAll('[data-source="headline"]').forEach((el) => {
+    if (d.status === 'ok') {
+      el.classList.remove('dash-skeleton');
+      el.textContent = fmtNum(d.data[0][el.dataset.field]);
+    } else if (d.status === 'error') {
+      el.classList.remove('dash-skeleton');
+      el.textContent = '—';
+    }
+  });
+}
+
+function showTab(name) {
+  window.gtState.tab = name;
+  document.querySelectorAll('.gt-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  document.querySelectorAll('.gt-page').forEach((p) => { p.hidden = p.id !== name; });
+  dash.setLink(name);
+  drawAll();
+}
+
+function drawAll() {
+  fillHeadline();
+  const tab = window.gtState.tab;
+  if (tab === 'overview') { window.gtCharts.drawCat(); window.gtCharts.drawKind(); window.gtCharts.drawYear(); }
+  if (tab === 'bugs') drawBugs();
+  if (tab === 'close') drawClose();
+}
+
+document.querySelectorAll('.gt-tab').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+document.getElementById('bug-search').addEventListener('input', (e) => { window.gtState.bugQ = e.target.value; drawBugs(); });
+document.getElementById('close-search').addEventListener('input', (e) => { window.gtState.closeQ = e.target.value; drawClose(); });
+
+const start = location.hash.slice(1);
+if (['overview', 'bugs', 'close'].includes(start)) window.gtState.tab = start;
+dash.onData(() => {
+  document.querySelectorAll('.gt-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === window.gtState.tab)));
+  document.querySelectorAll('.gt-page').forEach((p) => { p.hidden = p.id !== window.gtState.tab; });
+  drawAll();
+});
+
+})();
+</script>
+
+</div>
+<footer class="site-foot" id="foot">Data: open issues of <a href="https://github.com/google/fonts/issues">google/fonts</a>, read-only. Classification by rules plus hand-reviewed corrections (<code>pipeline/overrides.txt</code>). QA: googlefonts profile, network checks excluded.</footer>
+</body>
+</html>
