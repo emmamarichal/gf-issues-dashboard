@@ -1,0 +1,62 @@
+name: Build dashboard
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # every hour
+  workflow_dispatch:        # "Run workflow" button
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}   # read-only use: public google/fonts issues, users, repos
+      UPDATE_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/build.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Restore caches (QA results, profiles, previous run)
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/qa
+            .cache/gf-submissions/json
+            .cache/gf-submissions/last_run.json
+          key: build-${{ github.run_id }}
+          restore-keys: build-
+
+      - name: Build data and pages
+        run: python pipeline/build.py --jobs 4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
