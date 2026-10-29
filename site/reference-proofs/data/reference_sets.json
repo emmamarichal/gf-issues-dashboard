@@ -1,0 +1,752 @@
+{
+ "Latn-sans": [
+  [
+   "Inter",
+   "ofl/inter"
+  ],
+  [
+   "Roboto",
+   "ofl/roboto"
+  ],
+  [
+   "Open Sans",
+   "ofl/opensans"
+  ],
+  [
+   "Work Sans",
+   "ofl/worksans"
+  ],
+  [
+   "IBM Plex Sans",
+   "ofl/ibmplexsans"
+  ],
+  [
+   "Source Sans 3",
+   "ofl/sourcesans3"
+  ],
+  [
+   "Noto Sans",
+   "ofl/notosans"
+  ],
+  [
+   "Figtree",
+   "ofl/figtree"
+  ]
+ ],
+ "Latn-serif": [
+  [
+   "Source Serif 4",
+   "ofl/sourceserif4"
+  ],
+  [
+   "Merriweather",
+   "ofl/merriweather"
+  ],
+  [
+   "Literata",
+   "ofl/literata"
+  ],
+  [
+   "EB Garamond",
+   "ofl/ebgaramond"
+  ],
+  [
+   "Lora",
+   "ofl/lora"
+  ],
+  [
+   "Noto Serif",
+   "ofl/notoserif"
+  ],
+  [
+   "Crimson Pro",
+   "ofl/crimsonpro"
+  ],
+  [
+   "Newsreader",
+   "ofl/newsreader"
+  ]
+ ],
+ "Latn-mono": [
+  [
+   "JetBrains Mono",
+   "ofl/jetbrainsmono"
+  ],
+  [
+   "IBM Plex Mono",
+   "ofl/ibmplexmono"
+  ],
+  [
+   "Source Code Pro",
+   "ofl/sourcecodepro"
+  ],
+  [
+   "Roboto Mono",
+   "ofl/robotomono"
+  ],
+  [
+   "Fira Code",
+   "ofl/firacode"
+  ],
+  [
+   "Space Mono",
+   "ofl/spacemono"
+  ],
+  [
+   "Noto Sans Mono",
+   "ofl/notosansmono"
+  ]
+ ],
+ "Latn-display": [
+  [
+   "Playfair Display",
+   "ofl/playfairdisplay"
+  ],
+  [
+   "Bebas Neue",
+   "ofl/bebasneue"
+  ],
+  [
+   "Abril Fatface",
+   "ofl/abrilfatface"
+  ],
+  [
+   "Anton",
+   "ofl/anton"
+  ],
+  [
+   "DM Serif Display",
+   "ofl/dmserifdisplay"
+  ],
+  [
+   "Fraunces",
+   "ofl/fraunces"
+  ],
+  [
+   "Syne",
+   "ofl/syne"
+  ]
+ ],
+ "Latn-handwriting": [
+  [
+   "Caveat",
+   "ofl/caveat"
+  ],
+  [
+   "Dancing Script",
+   "ofl/dancingscript"
+  ],
+  [
+   "Pacifico",
+   "ofl/pacifico"
+  ],
+  [
+   "Kalam",
+   "ofl/kalam"
+  ],
+  [
+   "Patrick Hand",
+   "ofl/patrickhand"
+  ],
+  [
+   "Shadows Into Light",
+   "ofl/shadowsintolight"
+  ],
+  [
+   "Playwrite US Trad",
+   "ofl/playwriteustrad"
+  ]
+ ],
+ "Cyrl": [
+  [
+   "Roboto",
+   "ofl/roboto"
+  ],
+  [
+   "PT Sans",
+   "ofl/ptsans"
+  ],
+  [
+   "PT Serif",
+   "ofl/ptserif"
+  ],
+  [
+   "Noto Sans",
+   "ofl/notosans"
+  ],
+  [
+   "Noto Serif",
+   "ofl/notoserif"
+  ],
+  [
+   "Montserrat",
+   "ofl/montserrat"
+  ],
+  [
+   "Inter",
+   "ofl/inter"
+  ],
+  [
+   "Literata",
+   "ofl/literata"
+  ]
+ ],
+ "Grek": [
+  [
+   "Noto Sans",
+   "ofl/notosans"
+  ],
+  [
+   "Noto Serif",
+   "ofl/notoserif"
+  ],
+  [
+   "GFS Didot",
+   "ofl/gfsdidot"
+  ],
+  [
+   "Commissioner",
+   "ofl/commissioner"
+  ],
+  [
+   "Roboto",
+   "ofl/roboto"
+  ],
+  [
+   "Literata",
+   "ofl/literata"
+  ],
+  [
+   "Open Sans",
+   "ofl/opensans"
+  ],
+  [
+   "Advent Pro",
+   "ofl/adventpro"
+  ]
+ ],
+ "Knda": [
+  [
+   "Anek Kannada",
+   "ofl/anekkannada"
+  ],
+  [
+   "Baloo Tamma 2",
+   "ofl/balootamma2"
+  ],
+  [
+   "Benne",
+   "ofl/benne"
+  ],
+  [
+   "Hubballi",
+   "ofl/hubballi"
+  ],
+  [
+   "Noto Sans Kannada",
+   "ofl/notosanskannada"
+  ],
+  [
+   "Noto Serif Kannada",
+   "ofl/notoserifkannada"
+  ],
+  [
+   "Padyakke Expanded One",
+   "ofl/padyakkeexpandedone"
+  ],
+  [
+   "Tiro Kannada",
+   "ofl/tirokannada"
+  ]
+ ],
+ "Deva": [
+  [
+   "Noto Sans Devanagari",
+   "ofl/notosansdevanagari"
+  ],
+  [
+   "Noto Serif Devanagari",
+   "ofl/notoserifdevanagari"
+  ],
+  [
+   "Hind",
+   "ofl/hind"
+  ],
+  [
+   "Mukta",
+   "ofl/mukta"
+  ],
+  [
+   "Poppins",
+   "ofl/poppins"
+  ],
+  [
+   "Tiro Devanagari Hindi",
+   "ofl/tirodevanagarihindi"
+  ],
+  [
+   "Baloo 2",
+   "ofl/baloo2"
+  ],
+  [
+   "Anek Devanagari",
+   "ofl/anekdevanagari"
+  ]
+ ],
+ "Beng": [
+  [
+   "Noto Sans Bengali",
+   "ofl/notosansbengali"
+  ],
+  [
+   "Noto Serif Bengali",
+   "ofl/notoserifbengali"
+  ],
+  [
+   "Hind Siliguri",
+   "ofl/hindsiliguri"
+  ],
+  [
+   "Baloo Da 2",
+   "ofl/balooda2"
+  ],
+  [
+   "Tiro Bangla",
+   "ofl/tirobangla"
+  ],
+  [
+   "Anek Bangla",
+   "ofl/anekbangla"
+  ],
+  [
+   "Galada",
+   "ofl/galada"
+  ],
+  [
+   "Atma",
+   "ofl/atma"
+  ]
+ ],
+ "Taml": [
+  [
+   "Noto Sans Tamil",
+   "ofl/notosanstamil"
+  ],
+  [
+   "Noto Serif Tamil",
+   "ofl/notoseriftamil"
+  ],
+  [
+   "Mukta Malar",
+   "ofl/muktamalar"
+  ],
+  [
+   "Baloo Thambi 2",
+   "ofl/baloothambi2"
+  ],
+  [
+   "Anek Tamil",
+   "ofl/anektamil"
+  ],
+  [
+   "Hind Madurai",
+   "ofl/hindmadurai"
+  ],
+  [
+   "Catamaran",
+   "ofl/catamaran"
+  ],
+  [
+   "Pavanam",
+   "ofl/pavanam"
+  ]
+ ],
+ "Telu": [
+  [
+   "Noto Sans Telugu",
+   "ofl/notosanstelugu"
+  ],
+  [
+   "Noto Serif Telugu",
+   "ofl/notoseriftelugu"
+  ],
+  [
+   "Hind Guntur",
+   "ofl/hindguntur"
+  ],
+  [
+   "Mandali",
+   "ofl/mandali"
+  ],
+  [
+   "Anek Telugu",
+   "ofl/anektelugu"
+  ],
+  [
+   "Baloo Tammudu 2",
+   "ofl/balootammudu2"
+  ],
+  [
+   "Ramabhadra",
+   "ofl/ramabhadra"
+  ],
+  [
+   "NTR",
+   "ofl/ntr"
+  ]
+ ],
+ "Gujr": [
+  [
+   "Noto Sans Gujarati",
+   "ofl/notosansgujarati"
+  ],
+  [
+   "Noto Serif Gujarati",
+   "ofl/notoserifgujarati"
+  ],
+  [
+   "Hind Vadodara",
+   "ofl/hindvadodara"
+  ],
+  [
+   "Mukta Vaani",
+   "ofl/muktavaani"
+  ],
+  [
+   "Baloo Bhai 2",
+   "ofl/baloobhai2"
+  ],
+  [
+   "Anek Gujarati",
+   "ofl/anekgujarati"
+  ],
+  [
+   "Rasa",
+   "ofl/rasa"
+  ],
+  [
+   "Shrikhand",
+   "ofl/shrikhand"
+  ]
+ ],
+ "Guru": [
+  [
+   "Noto Sans Gurmukhi",
+   "ofl/notosansgurmukhi"
+  ],
+  [
+   "Noto Serif Gurmukhi",
+   "ofl/notoserifgurmukhi"
+  ],
+  [
+   "Mukta Mahee",
+   "ofl/muktamahee"
+  ],
+  [
+   "Baloo Paaji 2",
+   "ofl/baloopaaji2"
+  ],
+  [
+   "Anek Gurmukhi",
+   "ofl/anekgurmukhi"
+  ],
+  [
+   "Tiro Gurmukhi",
+   "ofl/tirogurmukhi"
+  ]
+ ],
+ "Mlym": [
+  [
+   "Noto Sans Malayalam",
+   "ofl/notosansmalayalam"
+  ],
+  [
+   "Noto Serif Malayalam",
+   "ofl/notoserifmalayalam"
+  ],
+  [
+   "Manjari",
+   "ofl/manjari"
+  ],
+  [
+   "Gayathri",
+   "ofl/gayathri"
+  ],
+  [
+   "Baloo Chettan 2",
+   "ofl/baloochettan2"
+  ],
+  [
+   "Anek Malayalam",
+   "ofl/anekmalayalam"
+  ],
+  [
+   "Chilanka",
+   "ofl/chilanka"
+  ]
+ ],
+ "Orya": [
+  [
+   "Noto Sans Oriya",
+   "ofl/notosansoriya"
+  ],
+  [
+   "Noto Serif Oriya",
+   "ofl/notoseriforiya"
+  ],
+  [
+   "Baloo Bhaina 2",
+   "ofl/baloobhaina2"
+  ],
+  [
+   "Anek Odia",
+   "ofl/anekodia"
+  ]
+ ],
+ "Sinh": [
+  [
+   "Noto Sans Sinhala",
+   "ofl/notosanssinhala"
+  ],
+  [
+   "Noto Serif Sinhala",
+   "ofl/notoserifsinhala"
+  ],
+  [
+   "Abhaya Libre",
+   "ofl/abhayalibre"
+  ],
+  [
+   "Yaldevi",
+   "ofl/yaldevi"
+  ],
+  [
+   "Gemunu Libre",
+   "ofl/gemunulibre"
+  ]
+ ],
+ "Arab": [
+  [
+   "Noto Naskh Arabic",
+   "ofl/notonaskharabic"
+  ],
+  [
+   "Noto Sans Arabic",
+   "ofl/notosansarabic"
+  ],
+  [
+   "Amiri",
+   "ofl/amiri"
+  ],
+  [
+   "Cairo",
+   "ofl/cairo"
+  ],
+  [
+   "Tajawal",
+   "ofl/tajawal"
+  ],
+  [
+   "Vazirmatn",
+   "ofl/vazirmatn"
+  ],
+  [
+   "Noto Kufi Arabic",
+   "ofl/notokufiarabic"
+  ],
+  [
+   "Rubik",
+   "ofl/rubik"
+  ]
+ ],
+ "Hebr": [
+  [
+   "Noto Sans Hebrew",
+   "ofl/notosanshebrew"
+  ],
+  [
+   "Noto Serif Hebrew",
+   "ofl/notoserifhebrew"
+  ],
+  [
+   "Rubik",
+   "ofl/rubik"
+  ],
+  [
+   "Heebo",
+   "ofl/heebo"
+  ],
+  [
+   "Assistant",
+   "ofl/assistant"
+  ],
+  [
+   "Frank Ruhl Libre",
+   "ofl/frankruhllibre"
+  ],
+  [
+   "Secular One",
+   "ofl/secularone"
+  ],
+  [
+   "Suez One",
+   "ofl/suezone"
+  ]
+ ],
+ "Thai": [
+  [
+   "Noto Sans Thai",
+   "ofl/notosansthai"
+  ],
+  [
+   "Noto Serif Thai",
+   "ofl/notoserifthai"
+  ],
+  [
+   "Sarabun",
+   "ofl/sarabun"
+  ],
+  [
+   "Prompt",
+   "ofl/prompt"
+  ],
+  [
+   "Kanit",
+   "ofl/kanit"
+  ],
+  [
+   "IBM Plex Sans Thai",
+   "ofl/ibmplexsansthai"
+  ],
+  [
+   "Mitr",
+   "ofl/mitr"
+  ],
+  [
+   "Chakra Petch",
+   "ofl/chakrapetch"
+  ]
+ ],
+ "Ethi": [
+  [
+   "Noto Sans Ethiopic",
+   "ofl/notosansethiopic"
+  ],
+  [
+   "Noto Serif Ethiopic",
+   "ofl/notoserifethiopic"
+  ],
+  [
+   "Abyssinica SIL",
+   "ofl/abyssinicasil"
+  ]
+ ],
+ "Geor": [
+  [
+   "Noto Sans Georgian",
+   "ofl/notosansgeorgian"
+  ],
+  [
+   "Noto Serif Georgian",
+   "ofl/notoserifgeorgian"
+  ]
+ ],
+ "Armn": [
+  [
+   "Noto Sans Armenian",
+   "ofl/notosansarmenian"
+  ],
+  [
+   "Noto Serif Armenian",
+   "ofl/notoserifarmenian"
+  ]
+ ],
+ "Khmr": [
+  [
+   "Noto Sans Khmer",
+   "ofl/notosanskhmer"
+  ],
+  [
+   "Noto Serif Khmer",
+   "ofl/notoserifkhmer"
+  ],
+  [
+   "Battambang",
+   "ofl/battambang"
+  ],
+  [
+   "Hanuman",
+   "ofl/hanuman"
+  ],
+  [
+   "Kantumruy Pro",
+   "ofl/kantumruypro"
+  ],
+  [
+   "Moul",
+   "ofl/moul"
+  ]
+ ],
+ "Mymr": [
+  [
+   "Noto Sans Myanmar",
+   "ofl/notosansmyanmar"
+  ],
+  [
+   "Noto Serif Myanmar",
+   "ofl/notoserifmyanmar"
+  ],
+  [
+   "Padauk",
+   "ofl/padauk"
+  ]
+ ],
+ "Laoo": [
+  [
+   "Noto Sans Lao",
+   "ofl/notosanslao"
+  ],
+  [
+   "Noto Serif Lao",
+   "ofl/notoseriflao"
+  ],
+  [
+   "Noto Sans Lao Looped",
+   "ofl/notosanslaolooped"
+  ]
+ ],
+ "Tibt": [
+  [
+   "Noto Serif Tibetan",
+   "ofl/notoseriftibetan"
+  ],
+  [
+   "Jomolhari",
+   "ofl/jomolhari"
+  ]
+ ],
+ "Cher": [
+  [
+   "Noto Sans Cherokee",
+   "ofl/notosanscherokee"
+  ]
+ ],
+ "Thaa": [
+  [
+   "Noto Sans Thaana",
+   "ofl/notosansthaana"
+  ]
+ ],
+ "Mong": [
+  [
+   "Noto Sans Mongolian",
+   "ofl/notosansmongolian"
+  ]
+ ],
+ "Cans": [
+  [
+   "Noto Sans Canadian Aboriginal",
+   "ofl/notosanscanadianaboriginal"
+  ]
+ ]
+}

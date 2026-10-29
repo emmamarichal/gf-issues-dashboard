@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reference proofs</title>
+<meta name="description" content="Drop a font and compare it, glyph by glyph and in text, with Google Fonts families of the same script. Printable to PDF.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ink: #1f1e1d; --muted: #6b6a65; --bg: #fcfcfb; --panel: #ffffff; --line: #e4e1d8; --line-soft: #efede7;
+  --accent: #2a78d6; --accent-ink: #1d5fb0; --cand-bg: #edf4fd; --cand-line: #9cc2ef;
+  --missing: #f4f2ed; --bad: #b3261e; --ok: #1a7f52;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --ink: #f0efec; --muted: #a8a69e; --bg: #1a1a19; --panel: #242422; --line: #3a3936; --line-soft: #2f2e2b;
+  --accent: #3987e5; --accent-ink: #8dbcf3; --cand-bg: #1d2c40; --cand-line: #3b6aa6;
+  --missing: #2a2927; --bad: #ff8a80; --ok: #5fd39b;
+} }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f0efec; --muted: #a8a69e; --bg: #1a1a19; --panel: #242422; --line: #3a3936; --line-soft: #2f2e2b;
+  --accent: #3987e5; --accent-ink: #8dbcf3; --cand-bg: #1d2c40; --cand-line: #3b6aa6;
+  --missing: #2a2927; --bad: #ff8a80; --ok: #5fd39b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); }
+a { color: var(--accent-ink); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+.site-nav { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 14px 0 0; font-size: 13px; color: var(--muted); }
+.site-nav a { color: var(--muted); }
+.site-nav b { color: var(--ink); font-weight: 600; }
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin: 22px 0 4px; }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 760px; }
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+@media (max-width: 960px) { .controls { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; margin: 0 0 10px; }
+label.f { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+input[type=text], select, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+textarea { min-height: 76px; resize: vertical; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.row { display: flex; gap: 8px; align-items: center; }
+.row > input[type=text] { flex: 1; min-width: 0; }
+button, .btn { font: inherit; font-weight: 500; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+button:hover, .btn:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .45; cursor: default; }
+.drop { border: 1.5px dashed var(--cand-line); background: var(--cand-bg); border-radius: 10px; padding: 18px 12px; text-align: center; cursor: pointer; color: var(--accent-ink); }
+.drop.over { border-style: solid; }
+.drop small { display: block; color: var(--muted); margin-top: 4px; }
+.or { text-align: center; color: var(--muted); font-size: 12px; margin: 8px 0; }
+.info { margin-top: 10px; font-size: 13px; }
+.info b { font-weight: 600; }
+.info .meta { color: var(--muted); }
+.err { color: var(--bad); font-size: 13px; margin-top: 8px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { flex: 1; text-align: center; padding: 6px 8px; cursor: pointer; font-size: 13px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--cand-bg); color: var(--accent-ink); font-weight: 600; }
+.seg label:has(input:disabled) { opacity: .45; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: 12.5px; background: var(--bg); }
+.chip .st { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.chip.ready .st { background: var(--ok); }
+.chip.error { border-color: var(--bad); color: var(--bad); }
+.chip.error .st { background: var(--bad); }
+.chip button { border: 0; background: none; padding: 0 6px; color: var(--muted); font-size: 15px; line-height: 1; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 18px; }
+.actions .hint { margin: 0; }
+
+/* proof */
+#proof { margin-bottom: 64px; }
+.empty { border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px 16px; text-align: center; color: var(--muted); }
+.proof-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin: 0 0 12px; }
+.proof-head h2 { font-size: 20px; font-weight: 600; margin: 0; }
+.proof-head p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.sec-title { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; margin: 22px 0 8px; }
+.gridwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+table.grid { border-collapse: separate; border-spacing: 0; width: 100%; }
+.grid th, .grid td { border-bottom: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft); }
+.grid th:last-child, .grid td:last-child { border-right: 0; }
+.grid thead th { position: sticky; top: 0; z-index: 1; background: var(--panel); font-size: 11.5px; font-weight: 600; text-align: center; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+.grid thead th .cov { display: block; font-weight: 400; color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+.grid thead th.cand { background: var(--accent); color: #fff; }
+.grid thead th.cand .cov { color: rgba(255,255,255,.8); }
+.grid thead th.lab { text-align: left; width: 74px; }
+table.grid { table-layout: fixed; min-width: calc(74px + var(--cols, 4) * 96px); }
+.grid td { text-align: center; vertical-align: baseline; padding: 10px 6px 8px; line-height: 1.9; white-space: nowrap; }
+.grid td.lab { text-align: left; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: middle; }
+.grid td.lab span { display: block; font-size: 15px; color: var(--ink); }
+.grid td.cand { background: var(--cand-bg); }
+.grid td.miss { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--missing) 6px 12px); color: var(--muted); font-size: 11px; vertical-align: middle; }
+.grid tr { break-inside: avoid; }
+.sheets { display: grid; gap: 14px; }
+.sheet { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 14px; }
+.sheet-n { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .blocks { grid-template-columns: 1fr; } }
+.block { border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px 12px 12px; min-width: 0; }
+.block.cand { border: 2px solid var(--accent); background: var(--cand-bg); }
+.block h3 { margin: 0 0 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.block.cand h3 { color: var(--accent-ink); }
+.block .t { overflow-wrap: anywhere; }
+.foot { color: var(--muted); font-size: 12px; padding: 0 0 40px; }
+
+@media print {
+  @page { size: A4 landscape; margin: 11mm; }
+  :root { color-scheme: light; --ink: #1f1e1d; --muted: #6b6a65; --bg: #fff; --panel: #fff; --line: #d9d6cc; --line-soft: #e9e7e1;
+    --accent: #2a78d6; --accent-ink: #1d5fb0; --cand-bg: #edf4fd; --cand-line: #9cc2ef; --missing: #eeece6; }
+  html, body { background: #fff; font-size: 11px; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print, .site-nav, h1, .lede, .controls, .actions, .foot { display: none !important; }
+  .wrap { max-width: none; padding: 0; }
+  .gridwrap { overflow: visible; border-radius: 0; border: 0; }
+  .grid thead th { position: static; }
+  .sheet { break-before: page; border: 0; padding: 0; }
+  .sheets { display: block; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="site-nav"><a href="../">Issue triage</a><a href="../submissions.html">Submissions to review</a><a href="../typo-guide/">Typo guide</a><b>Reference proofs</b><a href="../social-posts/">Social posts</a></nav>
+  <h1>Reference proofs</h1>
+  <p class="lede">Drop a font and compare it with Google Fonts families of the same script: one row per character, then text pages where the font sits next to three references at a time. Print the result, or save it as a PDF. The font you drop stays in your browser: nothing is uploaded.</p>
+
+  <div class="controls">
+    <section class="card">
+      <h2>1 · Font to review</h2>
+      <div class="drop" id="drop" tabindex="0" role="button">Drop a TTF, OTF or WOFF file, or click to choose<small>A variable font is fine.</small></div>
+      <input type="file" id="cand-file" accept=".ttf,.otf,.woff,.ttc" hidden>
+      <div class="or">or use a family from Google Fonts</div>
+      <div class="row"><input type="text" id="cand-gf" list="catalogue" placeholder="e.g. Hubballi" autocomplete="off"><button id="cand-gf-go">Load</button></div>
+      <div id="cand-info" class="info"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Compare with</h2>
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="mode" value="refs" checked>Reference families</label>
+        <label><input type="radio" name="mode" value="inst" id="mode-inst" disabled>Its named instances</label>
+      </div>
+      <div id="refs-box">
+        <label class="f" for="script">Script</label>
+        <div class="row">
+          <select id="script"></select>
+          <select id="category" title="Latin category" hidden>
+            <option value="sans">Sans serif</option><option value="serif">Serif</option><option value="mono">Monospace</option>
+            <option value="display">Display</option><option value="handwriting">Handwriting</option>
+          </select>
+        </div>
+        <div class="chips" id="chips"></div>
+        <label class="f" for="ref-add">Add a Google Fonts family</label>
+        <div class="row"><input type="text" id="ref-add" list="catalogue" placeholder="Family name" autocomplete="off"><button id="ref-add-go">Add</button></div>
+        <div class="row" style="margin-top:8px">
+          <button id="ref-files-btn">Add font files…</button>
+          <button id="ref-reset">Reset to suggested</button>
+        </div>
+        <input type="file" id="ref-files" accept=".ttf,.otf,.woff,.woff2,.ttc" multiple hidden>
+        <p class="hint" id="refs-hint"></p>
+      </div>
+      <p class="hint" id="inst-hint" hidden>Each column is one named instance of the font (fvar); the highlighted one is the default location. A quick way to check every glyph across the design space.</p>
+    </section>
+
+    <section class="card">
+      <h2>3 · Proof</h2>
+      <label class="f" for="chars">Characters</label>
+      <select id="chars"></select>
+      <textarea id="custom" placeholder="Type or paste the characters to compare" hidden></textarea>
+      <label class="f" for="gsize">Glyph size <span id="gsize-v"></span></label>
+      <input type="range" id="gsize" min="24" max="110" value="52">
+      <div id="wght-box" hidden>
+        <label class="f" for="wght">Weight (fonts with a wght axis) <span id="wght-v"></span></label>
+        <input type="range" id="wght" min="100" max="900" value="400">
+      </div>
+      <label class="f" for="tsize">Text size <span id="tsize-v"></span></label>
+      <input type="range" id="tsize" min="11" max="40" value="18">
+      <label class="f" for="sample">Sample text</label>
+      <textarea id="sample"></textarea>
+    </section>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="print" disabled>Print or save as PDF</button>
+    <span class="hint">Landscape A4. In the print dialog, turn on “Background graphics” if the highlighted column comes out white.</span>
+  </div>
+
+  <main id="proof"><div class="empty">Drop a font to start.</div></main>
+  <p class="foot">Reference families are read from <a href="https://github.com/google/fonts">google/fonts</a> (main branch). Suggested sets are in <code>site/reference-proofs/data/reference_sets.json</code>. Sample texts come from <a href="https://github.com/googlefonts/lang">gflanguages</a>.</p>
+</div>
+<datalist id="catalogue"></datalist>
+
+<script>
+(function () {
+  'use strict';
+  const RAW = 'https://raw.githubusercontent.com/google/fonts/main/';
+  const SCRIPT_NAMES = {
+    Latn: 'Latin', Cyrl: 'Cyrillic', Grek: 'Greek', Arab: 'Arabic', Hebr: 'Hebrew', Thaa: 'Thaana', Syrc: 'Syriac', Nkoo: 'N’Ko', Adlm: 'Adlam',
+    Deva: 'Devanagari', Beng: 'Bengali', Guru: 'Gurmukhi', Gujr: 'Gujarati', Orya: 'Odia', Taml: 'Tamil', Telu: 'Telugu', Knda: 'Kannada',
+    Mlym: 'Malayalam', Sinh: 'Sinhala', Thai: 'Thai', Laoo: 'Lao', Tibt: 'Tibetan', Mymr: 'Myanmar', Khmr: 'Khmer', Geor: 'Georgian',
+    Armn: 'Armenian', Ethi: 'Ethiopic', Cher: 'Cherokee', Cans: 'Canadian Syllabics', Mong: 'Mongolian', Tfng: 'Tifinagh', Vaii: 'Vai',
+    Bali: 'Balinese', Java: 'Javanese', Copt: 'Coptic', Glag: 'Glagolitic', Hang: 'Hangul', Hira: 'Hiragana', Kana: 'Katakana', Hani: 'Han',
+  };
+  const LGC = new Set(['Latn', 'Cyrl', 'Grek']);
+  const RTL = new Set(['Arab', 'Hebr', 'Thaa', 'Syrc', 'Nkoo', 'Adlm']);
+  const SCRIPT_RE = Object.fromEntries(Object.keys(SCRIPT_NAMES).map((s) => [s, new RegExp('^\\p{Script=' + s + '}$', 'u')]));
+  const IS_MARK = /^\p{M}$/u;
+  const SKIP = /^[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Zs}\p{Zl}\p{Zp}]$/u;
+  const COMMON = /^[\p{Script=Common}\p{Script=Inherited}]$/u;
+  const MAX_ROWS = 3000;
+
+  const $ = (id) => document.getElementById(id);
+  const state = { cand: null, refs: [], mode: 'refs', script: 'Latn', sets: {}, samples: {}, catalogue: null, sampleEdited: false };
+  let fontSeq = 0;
+
+  // ---------- font parsing (cmap, name, fvar) ----------
+  async function inflate(bytes) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  const tagAt = (dv, o) => String.fromCharCode(dv.getUint8(o), dv.getUint8(o + 1), dv.getUint8(o + 2), dv.getUint8(o + 3));
+
+  async function tablesOf(buf) {
+    const dv = new DataView(buf);
+    const sig = dv.getUint32(0);
+    const tables = {};
+    if (sig === 0x774F4632) throw new Error('WOFF2 files can be shown but not inspected here: please use the TTF or OTF.');
+    if (sig === 0x774F4646) {
+      const n = dv.getUint16(12);
+      for (let i = 0; i < n; i++) {
+        const r = 44 + i * 20, off = dv.getUint32(r + 4), comp = dv.getUint32(r + 8), orig = dv.getUint32(r + 12);
+        let bytes = new Uint8Array(buf, off, comp);
+        if (comp < orig) bytes = await inflate(bytes);
+        tables[tagAt(dv, r)] = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      }
+      return tables;
+    }
+    let base = 0;
+    if (sig === 0x74746366) base = dv.getUint32(12);
+    else if (sig !== 0x00010000 && sig !== 0x4F54544F && sig !== 0x74727565) throw new Error('This does not look like a font file.');
+    const n = dv.getUint16(base + 4);
+    for (let i = 0; i < n; i++) {
+      const r = base + 12 + i * 16;
+      tables[tagAt(dv, r)] = new DataView(buf, dv.getUint32(r + 8), dv.getUint32(r + 12));
+    }
+    return tables;
+  }
+
+  function parseCmap(t) {
+    const out = new Set();
+    if (!t) return out;
+    let best = -1, bestScore = -1;
+    for (let i = 0, n = t.getUint16(2); i < n; i++) {
+      const pid = t.getUint16(4 + i * 8), eid = t.getUint16(6 + i * 8), off = t.getUint32(8 + i * 8);
+      const fmt = t.getUint16(off);
+      let score = fmt === 12 ? 4 : fmt === 4 ? 3 : -1;
+      if (pid === 3 && eid === 0) score = fmt === 4 ? 1 : -1;
+      if (score > bestScore) { bestScore = score; best = off; }
+    }
+    if (best < 0) return out;
+    const fmt = t.getUint16(best);
+    if (fmt === 12) {
+      for (let g = 0, n = t.getUint32(best + 12); g < n; g++) {
+        const p = best + 16 + g * 12, s = t.getUint32(p), e = Math.min(t.getUint32(p + 4), 0x10FFFF);
+        for (let c = s; c <= e; c++) out.add(c);
+      }
+    } else {
+      const seg2 = t.getUint16(best + 6), ends = best + 14, starts = ends + seg2 + 2, deltas = starts + seg2, ros = deltas + seg2;
+      for (let s = 0; s < seg2; s += 2) {
+        const end = t.getUint16(ends + s), start = t.getUint16(starts + s), delta = t.getUint16(deltas + s), ro = t.getUint16(ros + s);
+        for (let c = start; c <= end && c !== 0xFFFF; c++) {
+          let g;
+          if (ro === 0) g = (c + delta) & 0xFFFF;
+          else {
+            const a = ros + s + ro + 2 * (c - start);
+            if (a + 2 > t.byteLength) break;
+            g = t.getUint16(a);
+            if (g) g = (g + delta) & 0xFFFF;
+          }
+          if (g) out.add(c);
+        }
+      }
+    }
+    return out;
+  }
+
+  function parseName(t) {
+    const names = {};
+    if (!t) return names;
+    const count = t.getUint16(2), strOff = t.getUint16(4);
+    const rank = {};
+    for (let i = 0; i < count; i++) {
+      const r = 6 + i * 12, pid = t.getUint16(r), lang = t.getUint16(r + 4), id = t.getUint16(r + 6), len = t.getUint16(r + 8), off = t.getUint16(r + 10);
+      const score = pid === 3 ? (lang === 0x409 ? 3 : 2) : pid === 1 ? 1 : 0;
+      if (!score || (rank[id] || 0) >= score) continue;
+      let s = '';
+      if (pid === 3) for (let k = 0; k + 1 < len; k += 2) s += String.fromCharCode(t.getUint16(strOff + off + k));
+      else for (let k = 0; k < len; k++) s += String.fromCharCode(t.getUint8(strOff + off + k));
+      names[id] = s; rank[id] = score;
+    }
+    return names;
+  }
+
+  function parseFvar(t, names) {
+    if (!t) return { axes: [], instances: [] };
+    const fx = (o) => Math.round((t.getInt32(o) / 65536) * 100) / 100;
+    const axesOff = t.getUint16(4), axisCount = t.getUint16(8), axisSize = t.getUint16(10), instCount = t.getUint16(12), instSize = t.getUint16(14);
+    const axes = [];
+    for (let i = 0; i < axisCount; i++) {
+      const o = axesOff + i * axisSize;
+      axes.push({ tag: tagAt(t, o), min: fx(o + 4), def: fx(o + 8), max: fx(o + 12) });
+    }
+    const instances = [];
+    for (let i = 0; i < instCount; i++) {
+      const o = axesOff + axisCount * axisSize + i * instSize;
+      const coords = {};
+      axes.forEach((a, k) => { coords[a.tag] = fx(o + 4 + k * 4); });
+      instances.push({ name: names[t.getUint16(o)] || 'Instance ' + (i + 1), coords });
+    }
+    return { axes, instances };
+  }
+
+  async function inspect(buf) {
+    const tables = await tablesOf(buf);
+    const names = parseName(tables.name);
+    const fvar = parseFvar(tables.fvar, names);
+    return { family: names[16] || names[1] || '', style: names[17] || names[2] || '', cmap: parseCmap(tables.cmap), ...fvar };
+  }
+
+  async function makeFont(buf, label, source) {
+    let info;
+    try { info = await inspect(buf); } catch (e) {
+      if (!/WOFF2/.test(e.message)) throw e;
+      info = { family: '', style: '', cmap: null, axes: [], instances: [] }; // shown, but coverage unknown
+    }
+    const css = 'rp' + (++fontSeq);
+    const face = new FontFace(css, buf);
+    await face.load();
+    document.fonts.add(face);
+    return { css, label: label || [info.family, info.style].filter(Boolean).join(' ') || 'Font', source, ...info };
+  }
+
+  // ---------- Google Fonts families ----------
+  const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const gfCache = new Map();
+
+  function pickFile(files) {
+    const roman = files.filter((f) => !/italic/i.test(f.filename));
+    const pool = roman.length ? roman : files;
+    return pool.find((f) => f.filename.includes('[')) || pool.find((f) => f.weight === 400) ||
+      pool.slice().sort((a, b) => Math.abs(a.weight - 400) - Math.abs(b.weight - 400))[0];
+  }
+
+  async function metadata(dir) {
+    const r = await fetch(RAW + dir + '/METADATA.pb');
+    if (!r.ok) return null;
+    const txt = await r.text();
+    const name = (txt.match(/^name:\s*"([^"]*)"/m) || [])[1];
+    const files = [...txt.matchAll(/fonts\s*\{([\s\S]*?)\n\}/g)].map((m) => ({
+      filename: (m[1].match(/filename:\s*"([^"]+)"/) || [])[1],
+      style: (m[1].match(/style:\s*"([^"]+)"/) || [])[1],
+      weight: +((m[1].match(/weight:\s*(\d+)/) || [])[1] || 400),
+    })).filter((f) => f.filename);
+    return files.length ? { dir, name: name || dir.split('/')[1], files } : null;
+  }
+
+  async function resolveDir(nameOrDir) {
+    if (/^(ofl|apache|ufl)\//.test(nameOrDir)) return nameOrDir;
+    const n = norm(nameOrDir);
+    if (state.catalogue) {
+      const hit = state.catalogue.find((c) => norm(c[1]) === n) || state.catalogue.find((c) => c[0].split('/')[1] === n);
+      if (hit) return hit[0];
+    }
+    for (const lic of ['ofl', 'apache', 'ufl']) {
+      const r = await fetch(RAW + lic + '/' + n + '/METADATA.pb', { method: 'HEAD' });
+      if (r.ok) return lic + '/' + n;
+    }
+    throw new Error('“' + nameOrDir + '” was not found in google/fonts.');
+  }
+
+  function loadGF(nameOrDir) {
+    const key = nameOrDir;
+    if (!gfCache.has(key)) {
+      gfCache.set(key, (async () => {
+        const dir = await resolveDir(nameOrDir);
+        const meta = await metadata(dir);
+        if (!meta) throw new Error('No METADATA.pb for ' + dir);
+        const f = pickFile(meta.files);
+        const r = await fetch(RAW + dir + '/' + encodeURIComponent(f.filename));
+        if (!r.ok) throw new Error('Could not download ' + f.filename + ' (HTTP ' + r.status + ')');
+        return makeFont(await r.arrayBuffer(), meta.name, { kind: 'gf', dir, file: f.filename });
+      })());
+      gfCache.get(key).catch(() => gfCache.delete(key));
+    }
+    return gfCache.get(key);
+  }
+
+  // ---------- candidate ----------
+  function scriptCounts(cmap) {
+    const counts = {};
+    for (const c of cmap) {
+      const ch = String.fromCodePoint(c);
+      for (const s in SCRIPT_RE) if (SCRIPT_RE[s].test(ch)) { counts[s] = (counts[s] || 0) + 1; break; }
+    }
+    return counts;
+  }
+
+  function primaryScript(counts) {
+    const other = Object.entries(counts).filter(([s, n]) => !LGC.has(s) && n >= 30).sort((a, b) => b[1] - a[1]);
+    if (other.length) return other[0][0];
+    return ['Latn', 'Cyrl', 'Grek'].sort((a, b) => (counts[b] || 0) - (counts[a] || 0))[0];
+  }
+
+  async function setCandidate(promise, label) {
+    const box = $('cand-info');
+    box.innerHTML = '<span class="meta">Loading ' + esc(label) + '…</span>';
+    try {
+      const f = await promise;
+      if (!f.cmap) throw new Error('Please use the TTF or OTF of the font to review (WOFF2 cannot be inspected here).');
+      state.cand = f;
+      state.counts = scriptCounts(f.cmap);
+      const scripts = Object.entries(state.counts).sort((a, b) => b[1] - a[1]);
+      box.innerHTML = '<b>' + esc(f.label) + '</b><div class="meta">' + f.cmap.size + ' characters · ' +
+        scripts.slice(0, 5).map(([s, n]) => esc(SCRIPT_NAMES[s]) + ' ' + n).join(', ') +
+        (f.axes.length ? '<br>Variable: ' + f.axes.map((a) => a.tag + ' ' + a.min + '–' + a.max).join(', ') + ' · ' + f.instances.length + ' named instances' : '') + '</div>';
+      $('mode-inst').disabled = !f.instances.length;
+      if (!f.instances.length && state.mode === 'inst') { document.querySelector('input[name=mode][value=refs]').checked = true; state.mode = 'refs'; }
+      fillScripts(primaryScript(state.counts));
+      fillChars(true);
+      setSuggested();
+    } catch (e) {
+      state.cand = null;
+      box.innerHTML = '<div class="err">' + esc(e.message || String(e)) + '</div>';
+      render();
+    }
+  }
+
+  function fillScripts(pick) {
+    const sel = $('script');
+    const have = Object.keys(state.counts || {}).filter((s) => state.counts[s] >= 5);
+    const known = Object.keys(state.samples);
+    const list = [...new Set([...have, ...known])];
+    list.sort((a, b) => (state.counts[b] || 0) - (state.counts[a] || 0) || SCRIPT_NAMES[a].localeCompare(SCRIPT_NAMES[b]));
+    sel.innerHTML = list.map((s) => '<option value="' + s + '">' + esc(SCRIPT_NAMES[s]) + (state.counts[s] ? ' (' + state.counts[s] + ')' : '') + '</option>').join('');
+    sel.value = pick;
+    state.script = pick;
+    $('category').hidden = pick !== 'Latn';
+    setSample();
+  }
+
+  function fillChars(reset) {
+    const sel = $('chars');
+    const prev = reset ? '' : sel.value;
+    const s = state.script;
+    const opts = [];
+    const n = (state.counts || {})[s] || 0;
+    if (n) opts.push(['script', SCRIPT_NAMES[s] + ' characters (' + n + ')']);
+    const common = state.cand ? [...state.cand.cmap].filter((c) => COMMON.test(String.fromCodePoint(c)) && !SKIP.test(String.fromCodePoint(c))).length : 0;
+    if (n && common) opts.push(['script+common', SCRIPT_NAMES[s] + ' + digits, punctuation, symbols (' + (n + common) + ')']);
+    if (common) opts.push(['common', 'Digits, punctuation, symbols (' + common + ')']);
+    opts.push(['all', 'Every character in the font (' + (state.cand ? state.cand.cmap.size : 0) + ')']);
+    opts.push(['custom', 'Custom…']);
+    sel.innerHTML = opts.map(([v, t]) => '<option value="' + v + '">' + esc(t) + '</option>').join('');
+    sel.value = opts.some((o) => o[0] === prev) ? prev : opts[0][0];
+    $('custom').hidden = sel.value !== 'custom';
+  }
+
+  function setSample() {
+    if (state.sampleEdited) return;
+    const s = state.samples[state.script];
+    $('sample').value = s ? s.text : '';
+  }
+
+  // ---------- references ----------
+  function setKey() { return state.script === 'Latn' ? 'Latn-' + $('category').value : state.script; }
+
+  function setSuggested() {
+    const c = state.cand;
+    const self = c ? [norm(c.family), norm(c.label), c.source.kind === 'gf' ? c.source.dir : ''] : [];
+    const all = state.sets[setKey()] || [];
+    const list = all.filter(([name, dir]) => !self.includes(norm(name)) && !self.includes(dir));
+    state.refs = list.map(([name, dir]) => ({ id: 'gf:' + dir, label: name, status: 'loading', promise: loadGF(dir) }));
+    state.refs.forEach(watchRef);
+    $('refs-hint').textContent = list.length ? 'Suggested for ' + (SCRIPT_NAMES[state.script] || state.script) + (state.script === 'Latn' ? ' ' + $('category').selectedOptions[0].text.toLowerCase() : '') + '. Remove or add families as you like.'
+      : 'No suggested families for this script yet: add some by name or as files.';
+    if (list.length < all.length) $('refs-hint').textContent += ' ' + c.family + ' itself is left out.';
+    renderChips();
+    render();
+  }
+
+  function watchRef(ref) {
+    ref.promise.then((f) => { ref.font = f; ref.label = f.label; ref.status = 'ready'; }, (e) => { ref.status = 'error'; ref.error = e.message || String(e); })
+      .then(() => { renderChips(); render(); });
+  }
+
+  function addRef(id, label, promise) {
+    if (state.refs.some((r) => r.id === id)) return;
+    const ref = { id, label, status: 'loading', promise };
+    state.refs.push(ref);
+    watchRef(ref);
+    renderChips();
+  }
+
+  function renderChips() {
+    $('chips').innerHTML = state.refs.map((r, i) => '<span class="chip ' + r.status + '" title="' + esc(r.error || (r.font && r.font.source.kind === 'gf' ? r.font.source.dir + '/' + r.font.source.file : r.label)) + '">' +
+      '<span class="st"></span>' + esc(r.label) + '<button data-i="' + i + '" aria-label="Remove ' + esc(r.label) + '">×</button></span>').join('');
+  }
+
+  // ---------- proof ----------
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function variation(font, coords) {
+    if (!font.axes || !font.axes.length) return '';
+    const parts = [];
+    if (coords) Object.entries(coords).forEach(([t, v]) => parts.push("'" + t + "' " + v));
+    else {
+      const w = font.axes.find((a) => a.tag === 'wght');
+      if (w && !$('wght-box').hidden) parts.push("'wght' " + Math.min(w.max, Math.max(w.min, +$('wght').value)));
+    }
+    return parts.length ? 'font-variation-settings:' + parts.join(',') + ';' : '';
+  }
+
+  function chosenChars() {
+    const mode = $('chars').value;
+    if (mode === 'custom') return [...new Set([...$('custom').value].filter((c) => !SKIP.test(c)).map((c) => c.codePointAt(0)))];
+    const re = SCRIPT_RE[state.script];
+    return [...state.cand.cmap].sort((a, b) => a - b).filter((c) => {
+      const ch = String.fromCodePoint(c);
+      if (SKIP.test(ch)) return false;
+      if (mode === 'all') return true;
+      const isScript = re && re.test(ch), isCommon = COMMON.test(ch);
+      return mode === 'script' ? isScript : mode === 'common' ? isCommon : isScript || isCommon;
+    });
+  }
+
+  function columns() {
+    const c = state.cand;
+    if (state.mode === 'inst') {
+      const def = Object.fromEntries(c.axes.map((a) => [a.tag, a.def]));
+      return c.instances.map((ins) => ({ font: c, label: ins.name, coords: ins.coords, cand: Object.keys(def).every((t) => ins.coords[t] === def[t]) }));
+    }
+    return [{ font: c, label: c.label, cand: true }].concat(state.refs.filter((r) => r.status === 'ready').map((r) => ({ font: r.font, label: r.label })));
+  }
+
+  function render() {
+    const out = $('proof');
+    $('print').disabled = !state.cand;
+    $('wght-box').hidden = !(state.cand && state.mode === 'refs' && [state.cand].concat(state.refs.map((r) => r.font).filter(Boolean)).some((f) => f.axes && f.axes.some((a) => a.tag === 'wght')));
+    $('wght-v').textContent = $('wght').value;
+    $('gsize-v').textContent = $('gsize').value + ' px';
+    $('tsize-v').textContent = $('tsize').value + ' px';
+    if (!state.cand) { out.innerHTML = '<div class="empty">Drop a font to start.</div>'; return; }
+    const cols = columns();
+    let chars = chosenChars();
+    const truncated = chars.length > MAX_ROWS;
+    if (truncated) chars = chars.slice(0, MAX_ROWS);
+    const gsize = +$('gsize').value;
+    const dir = RTL.has(state.script) ? 'rtl' : 'ltr';
+    const lang = (state.samples[state.script] || {}).lang || '';
+    const loading = state.mode === 'refs' ? state.refs.filter((r) => r.status === 'loading').length : 0;
+    const failed = state.mode === 'refs' ? state.refs.filter((r) => r.status === 'error') : [];
+
+    const style = cols.map((col) => "font-family:'" + col.font.css + "';" + variation(col.font, col.coords));
+    const has = (col, c) => !col.font.cmap || col.font.cmap.has(c);
+    const head = '<tr><th class="lab">Character</th>' + cols.map((col) => {
+      const n = col.font.cmap ? chars.filter((c) => col.font.cmap.has(c)).length : null;
+      return '<th class="' + (col.cand ? 'cand' : '') + '">' + esc(col.label) +
+        (state.mode === 'refs' ? '<span class="cov">' + (n == null ? 'coverage unknown' : n + ' / ' + chars.length) + '</span>' : '') + '</th>';
+    }).join('') + '</tr>';
+    const rows = chars.map((c) => {
+      const ch = String.fromCodePoint(c);
+      const hex = 'U+' + c.toString(16).toUpperCase().padStart(4, '0');
+      const shown = IS_MARK.test(ch) ? '◌' + ch : ch;
+      return '<tr><td class="lab"><span>' + esc(shown) + '</span>' + hex + '</td>' + cols.map((col, i) => has(col, c)
+        ? '<td class="' + (col.cand ? 'cand' : '') + '" style="' + style[i] + 'font-size:' + gsize + 'px">' + esc(shown) + '</td>'
+        : '<td class="miss' + (col.cand ? ' cand' : '') + '">not in font</td>').join('') + '</tr>';
+    }).join('');
+
+    const text = $('sample').value.trim();
+    let sheets = '';
+    if (text) {
+      const pages = [];
+      if (state.mode === 'inst') for (let i = 0; i < cols.length; i += 4) pages.push(cols.slice(i, i + 4));
+      else {
+        const refs = cols.slice(1);
+        if (!refs.length) pages.push([cols[0]]);
+        for (let i = 0; i < refs.length; i += 3) pages.push([cols[0]].concat(refs.slice(i, i + 3)));
+      }
+      sheets = pages.map((pg, p) => '<section class="sheet"><div class="sheet-n">Text ' + (p + 1) + ' / ' + pages.length + '</div><div class="blocks">' +
+        pg.map((col) => '<div class="block' + (col.cand ? ' cand' : '') + '"><h3>' + esc(col.label) + '</h3><div class="t" dir="' + dir + '" lang="' + esc(lang.split('_')[0]) + '" style="' +
+          style[cols.indexOf(col)] + 'font-size:' + $('tsize').value + 'px;line-height:1.5">' + esc(text) + '</div></div>').join('') + '</div></section>').join('');
+    }
+
+    const others = state.mode === 'inst' ? cols.length + ' named instances' : (cols.length - 1) + ' reference famil' + (cols.length === 2 ? 'y' : 'ies');
+    out.innerHTML = '<div class="proof-head"><h2>' + esc(state.cand.label) + '</h2><p>' + esc(SCRIPT_NAMES[state.script] || state.script) + ' · ' + others + ' · ' +
+      chars.length + ' characters · ' + new Date().toLocaleDateString(undefined, { dateStyle: 'medium' }) + '</p></div>' +
+      (loading ? '<p class="hint no-print">Loading ' + loading + ' reference famil' + (loading > 1 ? 'ies' : 'y') + '…</p>' : '') +
+      (failed.length ? '<p class="err no-print">Not loaded: ' + failed.map((r) => esc(r.label) + ' (' + esc(r.error) + ')').join('; ') + '</p>' : '') +
+      (truncated ? '<p class="hint">Showing the first ' + MAX_ROWS + ' characters.</p>' : '') +
+      '<div class="sec-title">Glyph by glyph</div>' +
+      (chars.length ? '<div class="gridwrap"><table class="grid" style="--cols:' + cols.length + '"><thead>' + head + '</thead><tbody dir="ltr">' + rows + '</tbody></table></div>' : '<div class="empty">No characters to compare.</div>') +
+      (sheets ? '<div class="sec-title">Text</div><div class="sheets">' + sheets + '</div>' : '');
+  }
+
+  let timer = null;
+  const later = () => { clearTimeout(timer); timer = setTimeout(render, 120); };
+
+  // ---------- events ----------
+  function bind() {
+    const drop = $('drop'), file = $('cand-file');
+    drop.addEventListener('click', () => file.click());
+    drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault(); drop.classList.remove('over');
+      const f = e.dataTransfer.files[0];
+      if (f) setCandidate(f.arrayBuffer().then((b) => makeFont(b, '', { kind: 'file', name: f.name })), f.name);
+    });
+    file.addEventListener('change', () => {
+      const f = file.files[0];
+      if (f) setCandidate(f.arrayBuffer().then((b) => makeFont(b, '', { kind: 'file', name: f.name })), f.name);
+      file.value = '';
+    });
+    const gfGo = () => { const v = $('cand-gf').value.trim(); if (v) setCandidate(loadGF(v), v); };
+    $('cand-gf-go').addEventListener('click', gfGo);
+    $('cand-gf').addEventListener('keydown', (e) => { if (e.key === 'Enter') gfGo(); });
+
+    document.querySelectorAll('input[name=mode]').forEach((r) => r.addEventListener('change', () => {
+      state.mode = r.value;
+      $('refs-box').hidden = state.mode !== 'refs';
+      $('inst-hint').hidden = state.mode !== 'inst';
+      render();
+    }));
+    $('script').addEventListener('change', () => {
+      state.script = $('script').value;
+      $('category').hidden = state.script !== 'Latn';
+      state.sampleEdited = false;
+      setSample(); fillChars(true); setSuggested();
+    });
+    $('category').addEventListener('change', setSuggested);
+    $('ref-reset').addEventListener('click', setSuggested);
+    $('chips').addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-i]');
+      if (!b) return;
+      state.refs.splice(+b.dataset.i, 1);
+      renderChips(); render();
+    });
+    const addGo = () => {
+      const v = $('ref-add').value.trim();
+      if (!v) return;
+      addRef('gf:' + norm(v), v, loadGF(v));
+      $('ref-add').value = '';
+    };
+    $('ref-add-go').addEventListener('click', addGo);
+    $('ref-add').addEventListener('keydown', (e) => { if (e.key === 'Enter') addGo(); });
+    $('ref-files-btn').addEventListener('click', () => $('ref-files').click());
+    $('ref-files').addEventListener('change', () => {
+      [...$('ref-files').files].forEach((f) => addRef('file:' + f.name + ':' + f.size, f.name, f.arrayBuffer().then((b) => makeFont(b, '', { kind: 'file', name: f.name }))));
+      $('ref-files').value = '';
+    });
+    $('chars').addEventListener('change', () => { $('custom').hidden = $('chars').value !== 'custom'; render(); });
+    $('custom').addEventListener('input', later);
+    ['gsize', 'tsize', 'wght'].forEach((id) => $(id).addEventListener('input', later));
+    $('sample').addEventListener('input', () => { state.sampleEdited = true; later(); });
+    $('print').addEventListener('click', () => window.print());
+  }
+
+  async function init() {
+    bind();
+    const get = (u) => fetch(u).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const [sets, samples, cat] = await Promise.all([get('data/reference_sets.json'), get('data/samples.json'), get('../data/catalogue.json')]);
+    state.sets = sets || {};
+    state.samples = samples || {};
+    if (cat) {
+      state.catalogue = cat;
+      $('catalogue').innerHTML = cat.map((c) => '<option value="' + esc(c[1]) + '"></option>').join('');
+    }
+    state.counts = {};
+    fillScripts('Latn');
+    fillChars();
+    render();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
