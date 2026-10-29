@@ -1,6 +1,6 @@
 # Google Fonts tools
 
-Tools for the people who triage, review and onboard fonts for [Google Fonts](https://github.com/google/fonts), made by Emma Marichal. Each one is a web page published on GitHub Pages from this repository, so there is nothing to install.
+Tools for the people who triage, review and onboard fonts for [Google Fonts](https://github.com/google/fonts), made by Emma Marichal. Each one is a web page on GitHub Pages, so there is nothing to install. All of them live in this repository, except the Typo Guide Generator, which has its own: [fontsglowup](https://github.com/emmamarichal/fontsglowup).
 
 None of the tools acts on GitHub by itself: nothing is commented, labelled or opened as a pull request unless a person does it.
 
@@ -8,7 +8,7 @@ None of the tools acts on GitHub by itself: nothing is commented, labelled or op
 | --- | --- | --- | --- |
 | Issue dashboard | See what is in the google/fonts issue backlog, what a script could fix, and what could be closed. | [Open](https://emmamarichal.github.io/gf-issues-dashboard/) | [`pipeline/`](pipeline/), [`site/index.html`](site/index.html) |
 | Submissions to review | Go through every pending font submission on one page, with a score and a to-do list per font. | [Open](https://emmamarichal.github.io/gf-issues-dashboard/submissions.html) | [`pipeline/gf_submissions.py`](pipeline/gf_submissions.py) |
-| Typo Guide Generator | Give a designer feedback: a short checklist to post on the GitHub issue, with a link to the full report. | [Open](https://emmamarichal.github.io/gf-issues-dashboard/typo-guide/) | [`site/typo-guide/`](site/typo-guide/) |
+| Typo Guide Generator | Give a designer feedback: a short checklist to post on the GitHub issue, with a link to the full report. | [Open](https://emmamarichal.github.io/fontsglowup/) | [fontsglowup](https://github.com/emmamarichal/fontsglowup) |
 | Reference proofs | Compare a font with Google Fonts families of the same script, glyph by glyph and in text. | [Open](https://emmamarichal.github.io/gf-issues-dashboard/reference-proofs/) | [`site/reference-proofs/`](site/reference-proofs/) |
 | Font Social Post Generator | Draft the post announcing a new family, with its images and the designer credited. | [Open](https://emmamarichal.github.io/gf-issues-dashboard/social-posts/) | [`site/social-posts/`](site/social-posts/) |
 
@@ -44,7 +44,7 @@ Outline quality and AI signals are heuristics to help a reviewer, not verdicts.
 
 ## Typo Guide Generator
 
-**[Open](https://emmamarichal.github.io/gf-issues-dashboard/typo-guide/)** · Code and full documentation: [`site/typo-guide/`](site/typo-guide/)
+**[Open](https://emmamarichal.github.io/fontsglowup/)** · Code and full documentation: [emmamarichal/fontsglowup](https://github.com/emmamarichal/fontsglowup)
 
 Feedback on a submission, without writing the same explanations again and again:
 
@@ -55,7 +55,7 @@ Feedback on a submission, without writing the same explanations again and again:
 
 The full report is stored in the link itself ([urlHosted](https://github.com/graphicore/urlHosted) format): nothing is uploaded, and a link cannot be changed afterwards. GitHub limits a comment to 65,536 characters, link included, so screenshots are compressed to fit; the tool says which ones to attach by hand when they don't.
 
-Anyone can suggest a link or a tutorial from the [contribute page](https://emmamarichal.github.io/gf-issues-dashboard/typo-guide/contribute.html). It prepares a pull request on this repository, so nothing changes until it is merged.
+Anyone can suggest a link or a tutorial from the [contribute page](https://emmamarichal.github.io/fontsglowup/contribute.html). It prepares a pull request on the fontsglowup repository, so nothing changes until it is merged.
 
 ## Reference proofs
 
@@ -120,7 +120,6 @@ QA uses fontspector when installed, otherwise fontbakery (googlefonts profile, n
 pipeline/            analysis behind the issue dashboard and the submissions report (Python)
 site/                what GitHub Pages serves
   index.html         Issue dashboard
-  typo-guide/        Typo Guide Generator
   reference-proofs/  Reference proofs
   social-posts/      Font Social Post Generator
 tool-plans/          one README per plan

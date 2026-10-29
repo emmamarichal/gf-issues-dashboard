@@ -45,7 +45,7 @@ jobs:
           restore-keys: build-
 
       - name: Build data and pages
-        run: python pipeline/build.py --jobs 4
+        run: python pipeline/build.py --jobs 4 --time-budget 110
 
       - uses: actions/upload-pages-artifact@v3
         with:
