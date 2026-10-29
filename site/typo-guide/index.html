@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typo Guide Generator</title>
+<meta name="description" content="Triage a font submission: pick the problems, resources, tutorials and Fontspector checks, then post a GitHub checklist linking to the full report.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✎</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="masthead__mark">Typo Guide Generator</p>
+    <h1>Compose a custom correction guide</h1>
+    <p>Select the problems found on this project, check the related resources, run Fontspector, add screenshots — then post a checklist on the GitHub issue, with a link to the full report.</p>
+    <nav class="masthead__nav">
+      <a href="contribute.html">Suggest a link or tutorial</a>
+      <a href="../">Other Google Fonts tools</a>
+    </nav>
+  </header>
+
+  <!-- Step 1 — problems -->
+  <section class="section" id="section-1">
+    <div class="section__head">
+      <span class="section__num">01</span>
+      <h2>Select the problems</h2>
+    </div>
+    <p class="section__intro">Check everything that applies to this project. The list in the next step is calculated from these choices — come back here and click "Show links" again if you change your mind.</p>
+    <div id="problems-list"><!-- rendered by js/app.js --></div>
+    <div class="actions-row">
+      <button class="btn btn--primary" id="btn-show-links" type="button">Show links</button>
+    </div>
+  </section>
+
+  <!-- Step 2 — links & tutorials -->
+  <section class="section" id="section-2">
+    <div class="section__head">
+      <span class="section__num">02</span>
+      <h2>Review the links &amp; tutorials</h2>
+    </div>
+    <p class="section__intro">Uncheck anything that isn't relevant to this project, add a missing link. Matching tutorials (if any) are shown first, and get embedded in full in the report — not just linked. This selection goes into the GitHub checklist and the full report, sorted by problem.</p>
+
+    <div id="links-empty-hint" class="empty-hint">Check at least one problem in step 1, then click "Show links".</div>
+    <div id="links-groups"></div>
+
+    <div class="add-link-form">
+      <p class="add-link-form__title">Add a link manually</p>
+      <div class="field">
+        <label for="ml-title">Title</label>
+        <input type="text" id="ml-title" placeholder="e.g. How to draw a correct ß">
+      </div>
+      <div class="field">
+        <label for="ml-url">URL</label>
+        <input type="url" id="ml-url" placeholder="https://…">
+      </div>
+      <div class="field">
+        <label for="ml-explain">Explanation (appears in the full report)</label>
+        <textarea id="ml-explain" placeholder="A sentence or two to frame the problem and the resource."></textarea>
+      </div>
+      <div class="field">
+        <label for="ml-tags">Tags (comma-separated)</label>
+        <input type="text" id="ml-tags" placeholder="e.g. german, eszett">
+      </div>
+      <div class="actions-row" style="margin-top:14px;">
+        <button class="btn btn--secondary" id="btn-add-manual-link" type="button">Add this link</button>
+      </div>
+
+      <div class="json-snippet" id="manual-link-json">
+        <p style="font-size:0.8rem;color:var(--ink-soft);margin:14px 0 4px;">To keep this link available next time (for you or someone else), copy this into <code>data/links-database.json</code>:</p>
+        <pre id="manual-link-json-pre"></pre>
+      </div>
+
+      <p style="font-size:0.8rem;color:var(--ink-soft);margin:14px 0 0;">Want to add a full tutorial (a .md file, embedded in the report) rather than a link? That goes through <a href="contribute.html">the suggestion page</a>, since it involves adding a file to the repo.</p>
+    </div>
+  </section>
+
+  <!-- Step 3 — fontspector report -->
+  <section class="section" id="section-3">
+    <div class="section__head">
+      <span class="section__num">03</span>
+      <h2>Fontspector report <span style="font-weight:400;color:var(--ink-faint);font-size:0.85rem;">(optional)</span></h2>
+    </div>
+    <p class="section__intro">Drop the font files and they're checked right here with Fontspector, using the Google Fonts profile — the same engine as the <a href="https://fonttools.github.io/fontspector/" target="_blank" rel="noopener">official web tool</a>, running in your browser. Then tick the fails and warnings worth prioritizing for this designer, and add a comment where it helps. What you tick goes into the full report; the checks you comment on are also listed in the GitHub comment.</p>
+
+    <div class="dropzone" id="font-dropzone">
+      <p class="dropzone__label">Drop font files here, or click to choose</p>
+      <p class="dropzone__hint">.ttf or .otf — drop a whole family at once to also run the family-level checks. Nothing is uploaded: the fonts never leave your browser.</p>
+      <input type="file" id="font-file-input" accept=".ttf,.otf,font/ttf,font/otf" multiple>
+    </div>
+
+    <p class="fontspector-status" id="fontspector-status" aria-live="polite"></p>
+
+    <details class="fontspector-paste-fallback" id="fontspector-paste-details">
+      <summary>Already have a report? Paste it instead</summary>
+      <div class="field" style="margin-top:12px;">
+        <label for="fontspector-paste">Fontspector report — any format</label>
+        <textarea id="fontspector-paste" style="min-height:140px;font-family:var(--font-mono);font-size:0.78rem;" placeholder="Paste a Fontspector report here — JSON, markdown, or plain text all work…"></textarea>
+      </div>
+      <p style="margin:6px 0 0;font-size:0.8125rem;color:var(--ink-soft);">Useful for a report from the command line (<code>fontspector --profile googlefonts --ghmarkdown report.md MyFont.ttf</code>). Paste past the totals table at the top, into the per-check results.</p>
+      <div class="actions-row" style="justify-content:flex-start;">
+        <button class="btn btn--secondary" id="btn-parse-fontspector" type="button">Parse report</button>
+      </div>
+    </details>
+
+    <div class="report-status" id="fontspector-summary">
+      <strong id="fontspector-summary-title"></strong>
+      <div class="report-status__summary" id="fontspector-summary-counts"></div>
+    </div>
+
+    <div id="fontspector-checks" class="check-list"></div>
+  </section>
+
+  <!-- Step 4 — screenshots -->
+  <section class="section" id="section-4">
+    <div class="section__head">
+      <span class="section__num">04</span>
+      <h2>Add screenshots <span style="font-weight:400;color:var(--ink-faint);font-size:0.85rem;">(optional)</span></h2>
+    </div>
+    <p class="section__intro">Show the actual problem — a bad glyph, a spacing issue — with a comment, and link it to one of the problems from step 1: the GitHub checklist then points to it. Images and comments go into the full report, compressed so the report link still fits in a GitHub comment.</p>
+
+    <div class="dropzone" id="screenshot-dropzone">
+      <p class="dropzone__label">Drop image files here, or click to choose</p>
+      <p class="dropzone__hint">You can add several at once. Nothing is uploaded anywhere — this stays in your browser.</p>
+      <input type="file" id="screenshot-file-input" accept="image/*" multiple>
+    </div>
+
+    <div id="screenshots-empty-hint" class="empty-hint" style="margin-top:14px;">No screenshots added yet.</div>
+    <div id="screenshots-list" class="screenshots-list"></div>
+  </section>
+
+  <!-- Step 5 — generate -->
+  <section class="section" id="section-5">
+    <div class="section__head">
+      <span class="section__num">05</span>
+      <h2>Generate the GitHub comment</h2>
+    </div>
+    <p class="section__intro">A few details, then generate: you get a short Markdown checklist to paste as a comment on the font's GitHub issue — one action per problem, the Fontspector checks you commented on — and a link to the full report with everything else (screenshots, links, tutorials, complete Fontspector results).</p>
+
+    <div class="meta-grid">
+      <div class="field">
+        <label for="meta-title">Title</label>
+        <input type="text" id="meta-title" value="Typography review">
+      </div>
+      <div class="field">
+        <label for="meta-project">Project / font name</label>
+        <input type="text" id="meta-project" placeholder="e.g. Fontname v0.3">
+      </div>
+      <div class="field">
+        <label for="meta-designer">Designer / foundry</label>
+        <input type="text" id="meta-designer" placeholder="optional — @handle notifies them">
+      </div>
+    </div>
+    <div class="field" style="max-width:var(--prose-w);">
+      <label for="meta-notes">Intro note (optional)</label>
+      <textarea id="meta-notes" placeholder="Optional: a line for the designer, right above the checklist. Markdown works."></textarea>
+    </div>
+
+    <div class="field--row" style="max-width:var(--prose-w);margin-top:4px;">
+      <div class="field">
+        <label for="meta-reviewer-name">Reviewer name</label>
+        <input type="text" id="meta-reviewer-name" placeholder="Who's reviewing">
+      </div>
+      <div class="field">
+        <label for="meta-reviewer-contact">Reviewer contact</label>
+        <input type="text" id="meta-reviewer-contact" placeholder="email or website (optional)">
+      </div>
+    </div>
+
+    <div class="generate-panel">
+      <button class="btn btn--primary btn--lg" id="btn-generate" type="button">Generate the GitHub comment</button>
+      <p class="generate-panel__note">Everything happens in your browser. The full report is stored in its link itself — nothing is uploaded anywhere.</p>
+    </div>
+
+    <div class="output-panel" id="output-panel" hidden>
+      <div class="output-panel__head">
+        <h3 class="output-panel__title">GitHub comment</h3>
+        <div class="tabs" role="tablist" aria-label="Comment view">
+          <button type="button" class="tabs__tab is-active" role="tab" aria-selected="true" aria-controls="comment-preview" id="tab-preview">Preview</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" aria-controls="comment-markdown" id="tab-markdown">Markdown</button>
+        </div>
+      </div>
+
+      <p class="output-panel__stale" id="output-stale" hidden>Something changed since this comment was generated — generate it again to include it.</p>
+
+      <div class="output-panel__preview md" id="comment-preview" role="tabpanel" aria-labelledby="tab-preview"></div>
+      <p class="output-panel__hint" id="output-edit-hint" hidden>You can edit the wording here before copying. <span id="output-edited" hidden>Edited — generating again starts over from the form.</span></p>
+      <textarea class="output-panel__markdown" id="comment-markdown" role="tabpanel" aria-labelledby="tab-markdown" hidden spellcheck="false"></textarea>
+
+      <div class="size-meter" id="size-meter">
+        <div class="size-meter__bar"><span class="size-meter__fill" id="size-meter-fill"></span></div>
+        <p class="size-meter__text" id="size-meter-text"></p>
+      </div>
+      <ul class="output-panel__notes" id="output-notes"></ul>
+
+      <div class="actions-row actions-row--start">
+        <button class="btn btn--primary" id="btn-copy-markdown" type="button">Copy the comment</button>
+        <a class="btn btn--secondary" id="btn-open-report" href="report.html" target="_blank" rel="noopener">Open the full report</a>
+        <button class="btn btn--ghost" id="btn-copy-link" type="button">Copy the report link</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <span>Typo Guide Generator</span>
+    <a href="contribute.html">Suggest a link or tutorial →</a>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/urlhosted.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/github-comment.js"></script>
+<script src="js/fontspector.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

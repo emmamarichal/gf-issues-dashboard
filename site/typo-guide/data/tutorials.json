@@ -1,0 +1,61 @@
+[
+  {
+    "id": "glyphs-diacritics-workflow",
+    "title": "Organizing composite glyphs for consistent diacritics in Glyphs",
+    "path": "tutorials/example-glyphs-diacritics-workflow.md",
+    "tags": [
+      "glyphs-software",
+      "latin",
+      "accents",
+      "diacritics",
+      "germandbls"
+    ],
+    "description": "A short workflow for keeping accent height and position consistent across a family, using components and consistently-named anchors."
+  },
+  {
+    "id": "outline-health-check",
+    "title": "A five-minute outline health check",
+    "path": "tutorials/example-outline-health-check.md",
+    "tags": [
+      "outlines",
+      "drawing",
+      "points",
+      "curves"
+    ],
+    "description": "The five things to check before export that catch most automated QA outline fails: open paths, overlaps, missing extrema, contour direction, stray points."
+  },
+  {
+    "id": "prepare-your-article",
+    "title": "How to prepare your article",
+    "path": "tutorials/example-prepare-your-article.md",
+    "tags": [
+      "metadata",
+      "naming"
+    ],
+    "description": "What to include in the write-up that accompanies a font submission or release — description, style list, license, sample, credit."
+  },
+  {
+    "id": "comb-accents-setup",
+    "title": "How to set up comb accents",
+    "path": "tutorials/example-comb-accents-setup.md",
+    "tags": [
+      "combining",
+      "marks",
+      "anchors",
+      "gdef"
+    ],
+    "description": "Mark-to-base vs. mark-to-mark positioning, anchor naming conventions, how to actually test it, and the most common setup mistakes."
+  },
+  {
+    "id": "config-yaml-setup",
+    "title": "Set up the config.yaml",
+    "path": "tutorials/example-config-yaml-setup.md",
+    "tags": [
+      "variable-font",
+      "stat",
+      "fvar",
+      "metadata"
+    ],
+    "description": "What a variable-font build config actually controls, a minimal example, and the validation errors that come from getting it wrong."
+  }
+]

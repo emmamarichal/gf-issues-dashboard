@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Everything on this page comes from the link (after "#?"), i.e. from text
+     anyone can write: scripts only from this site, no inline scripts. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Full report · Typo Guide Generator</title>
+<meta name="description" content="Full typography review report: Fontspector checks, resources, tutorials and annotated screenshots.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✎</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/report.css">
+</head>
+<body class="report-page">
+<div class="page">
+
+  <header class="masthead report-masthead">
+    <p class="masthead__mark" id="r-mark">Typo Guide Generator · Full report</p>
+    <h1 id="r-title">Opening the report…</h1>
+    <p id="r-subtitle"></p>
+    <nav class="masthead__nav report-actions" id="r-actions" hidden>
+      <button type="button" id="btn-copy-comment">Copy the GitHub comment</button>
+      <button type="button" id="btn-print">Print or save as PDF</button>
+      <a id="btn-edit" href="index.html">Edit in the generator</a>
+    </nav>
+  </header>
+
+  <main id="report-root" aria-live="polite"></main>
+
+  <footer class="page-footer">
+    <span id="r-footer-note">This report lives entirely in its link: the data sits after the “#” and is never sent to a server.</span>
+    <a href="index.html">Typo Guide Generator →</a>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/urlhosted.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/github-comment.js"></script>
+<script src="js/report.js"></script>
+</body>
+</html>

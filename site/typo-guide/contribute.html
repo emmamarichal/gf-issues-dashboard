@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suggest links or tutorials — Typo Guide Generator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✎</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="masthead__mark">Typo Guide Generator</p>
+    <h1>Suggest links or tutorials</h1>
+    <p>Add resources or a full tutorial below. This page can only <em>propose</em> additions — it opens a GitHub pull request for the repo owner to review; nothing changes on the live site until it's merged.</p>
+    <nav class="masthead__nav">
+      <a href="index.html">← Back to the tool</a>
+    </nav>
+  </header>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 style="font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin:0;">Tags already in use</h2>
+    </div>
+    <p class="section__intro" style="margin-left:0;">Reuse one of these where it fits, so your link actually surfaces for the matching problem. New tags are fine too — they just won't match anything until a problem in <code>data/problems.json</code> uses them.</p>
+    <div class="tags" id="known-tags"></div>
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 style="font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin:0;">Suggest links</h2>
+    </div>
+    <p class="section__intro" style="margin-left:0;">Title and URL are required; tags and explanation are optional but make the suggestion much more useful.</p>
+
+    <div id="entries"></div>
+
+    <div class="actions-row" style="justify-content:flex-start;margin-top:20px;">
+      <button type="button" class="btn btn--secondary" id="btn-add-entry">+ Add another link</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 style="font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin:0;">Submit links</h2>
+    </div>
+    <p class="section__intro" style="margin-left:0;">Clicking below copies your links and opens <code>data/links-database.json</code> directly on GitHub in a new tab. Paste right after the opening <code>[</code> on the first line, then scroll down and commit — GitHub will propose it as a pull request. You'll need a free GitHub account; if you're not signed in, GitHub will ask first. If you don't already have write access, GitHub forks the repo for you automatically.</p>
+
+    <div class="actions-row" style="justify-content:flex-start;">
+      <button type="button" class="btn btn--primary btn--lg" id="btn-create-pr">Copy links &amp; open GitHub</button>
+    </div>
+
+    <div class="json-snippet" id="pr-preview">
+      <p style="font-size:0.8rem;color:var(--ink-soft);margin:16px 0 4px;">This is what was copied — paste it just after the opening <code>[</code>:</p>
+      <pre id="pr-preview-pre"></pre>
+      <div class="actions-row" style="justify-content:flex-start;margin-top:8px;">
+        <button type="button" class="btn btn--ghost" id="btn-copy-again">Copy again</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 style="font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin:0;">Suggest a tutorial</h2>
+    </div>
+    <p class="section__intro" style="margin-left:0;">A tutorial is a full Markdown page, embedded in full (with formatting) in the full report whenever a matching problem is checked — not just linked. Write it below in Markdown: headings with <code>#</code>, lists with <code>-</code>, <code>**bold**</code>, <code>[links](url)</code>, and fenced code blocks all work.</p>
+
+    <div class="add-link-form">
+      <div class="field">
+        <label for="tut-title">Title</label>
+        <input type="text" id="tut-title" placeholder="e.g. Fixing tone-mark collisions in Vietnamese">
+      </div>
+      <div class="field">
+        <label for="tut-tags">Tags (comma-separated — see the list above)</label>
+        <input type="text" id="tut-tags" placeholder="e.g. vietnamese, stacking, glyphs-software">
+      </div>
+      <div class="field">
+        <label for="tut-description">Short description (shown in the interface, one line)</label>
+        <input type="text" id="tut-description" placeholder="What this tutorial covers, in one sentence.">
+      </div>
+      <div class="field">
+        <label for="tut-content">Tutorial content (Markdown)</label>
+        <textarea id="tut-content" style="min-height:220px;font-family:var(--font-mono);font-size:0.8rem;" placeholder="# Title&#10;&#10;Write your tutorial here…"></textarea>
+      </div>
+    </div>
+
+    <p class="section__intro" style="margin-left:0;margin-top:18px;">Two small steps, since a tutorial touches two files — the content itself, and its entry in the list:</p>
+
+    <div class="actions-row" style="justify-content:flex-start;">
+      <button type="button" class="btn btn--secondary" id="btn-create-tutorial-file">1. Create the tutorial file on GitHub</button>
+      <button type="button" class="btn btn--primary" id="btn-create-tutorial-entry">2. Copy its listing &amp; open GitHub</button>
+    </div>
+
+    <div class="json-snippet" id="tutorial-preview">
+      <p style="font-size:0.8rem;color:var(--ink-soft);margin:16px 0 4px;">This is what step 2 copies — paste it just after the opening <code>[</code> in <code>data/tutorials.json</code>:</p>
+      <pre id="tutorial-preview-pre"></pre>
+      <div class="actions-row" style="justify-content:flex-start;margin-top:8px;">
+        <button type="button" class="btn btn--ghost" id="btn-copy-tutorial-again">Copy again</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <span>Typo Guide Generator</span>
+    <a href="index.html">← Back to the tool</a>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/contribute.js"></script>
+</body>
+</html>
