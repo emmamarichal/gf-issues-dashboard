@@ -1,5 +1,23 @@
-"""Flatten triage + QA into the site's data files."""
-import datetime as dt, json, os
+"""Flatten triage + QA into the site's data files, plus the font catalogue used by the proof tool."""
+import datetime as dt, json, os, re
+
+
+def display_name(filename):
+    stem = re.split(r"[\[-]", filename.rsplit(".", 1)[0])[0]
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", stem.replace("_", " "))
+
+
+def catalogue(work, site_data):
+    """Every family in ofl/, apache/, ufl/ with its font files: [[dir, name, [files]]]."""
+    fams = {}
+    for line in open(os.path.join(work, "current_font_files.txt")):
+        line = line.strip()
+        if line.count("/") == 2:
+            d, fn = line.rsplit("/", 1)
+            fams.setdefault(d, []).append(fn)
+    rows = [[d, display_name(sorted(fs)[0]), sorted(fs)] for d, fs in sorted(fams.items())]
+    json.dump(rows, open(os.path.join(site_data, "catalogue.json"), "w"), separators=(",", ":"))
+    return len(rows)
 
 
 def run(work, site_data, extra_meta=None):
@@ -40,7 +58,7 @@ def run(work, site_data, extra_meta=None):
     json.dump(issues, open(os.path.join(site_data, "issues_triage.json"), "w"), separators=(",", ":"))
     json.dump(close, open(os.path.join(site_data, "close_candidates.json"), "w"), separators=(",", ":"))
     meta = {"built": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "issues": len(issues),
-            "qa_families": len(fs)}
+            "qa_families": len(fs), "catalogue_families": catalogue(work, site_data)}
     meta.update(extra_meta or {})
     json.dump(meta, open(os.path.join(site_data, "meta.json"), "w"), indent=1)
     return meta

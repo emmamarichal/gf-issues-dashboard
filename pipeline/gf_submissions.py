@@ -586,6 +586,9 @@ NETWORK_CHECKS = {"googlefonts/metadata/broken_links", "googlefonts/description/
 SEV = {"PASS": 0, "SKIP": 0, "INFO": 1, "WARN": 2, "FAIL": 3, "ERROR": 3, "FATAL": 4}
 
 
+QA_DEADLINE = None  # time.monotonic() after which QA is left for the next run (hosted builds)
+
+
 def run_qa(d, font_paths, checker, cache, sha):
     if not font_paths or checker == "none":
         return None
@@ -593,13 +596,16 @@ def run_qa(d, font_paths, checker, cache, sha):
     hit = cache.get(key, 24 * 30)
     if hit is not None:
         return hit
+    left = QA_DEADLINE - time.monotonic() if QA_DEADLINE else None
+    if left is not None and left < 60:
+        return None
     files = [os.path.join(d, p) for p in font_paths[:20]]
     tmp = os.path.join(cache.root, "qa_tmp_" + hashlib.sha1(key.encode()).hexdigest()[:10] + ".json")
     res = None
     if checker in ("auto", "fontspector") and shutil.which("fontspector"):
         try:
             subprocess.run(["fontspector", "--profile", "googlefonts", "--json", tmp] + files,
-                           capture_output=True, timeout=900)
+                           capture_output=True, timeout=int(min(900, left or 900)))
             if os.path.exists(tmp):
                 res = parse_any_report(json.load(open(tmp)), "fontspector")
         except Exception as e:
@@ -607,7 +613,7 @@ def run_qa(d, font_paths, checker, cache, sha):
     if res is None and checker in ("auto", "fontbakery") and shutil.which("fontbakery"):
         try:
             subprocess.run(["fontbakery", "check-googlefonts", "-l", "FAIL", "--json", tmp] + files,
-                           capture_output=True, timeout=1500)
+                           capture_output=True, timeout=int(min(1500, left or 1500)))
             if os.path.exists(tmp):
                 res = parse_any_report(json.load(open(tmp)), "fontbakery")
         except Exception as e:

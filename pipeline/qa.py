@@ -3,7 +3,7 @@
 Uses fontspector when installed, otherwise fontbakery. Network-dependent checks are ignored so
 results are stable. Output: WORK/qa_results.json  {family: {fail, fail_checks, verdict}}
 """
-import concurrent.futures as cf, json, os, shutil, subprocess
+import concurrent.futures as cf, json, os, shutil, subprocess, time
 
 from gf_submissions import parse_any_report
 
@@ -40,10 +40,15 @@ def checkout(gf, families):
     subprocess.run(["git", "-C", gf, "merge", "-q", "--ff-only", "origin/main"], capture_output=True, timeout=1800)
 
 
-def check_one(gf, fam, sha, cache_dir, timeout):
+def check_one(gf, fam, sha, cache_dir, timeout, deadline=None):
     key = os.path.join(cache_dir, fam.replace("/", "__") + "__" + (sha or "none")[:12] + ".json")
     if os.path.exists(key):
         return fam, json.load(open(key))
+    if deadline is not None:
+        left = deadline - time.monotonic()
+        if left < 60:
+            return fam, {"error": "not checked yet (time budget of this build used up)", "retry": True}
+        timeout = int(min(timeout, left))
     d = os.path.join(gf, fam)
     files = sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith((".ttf", ".otf"))) if os.path.isdir(d) else []
     if not files:
@@ -68,7 +73,8 @@ def check_one(gf, fam, sha, cache_dir, timeout):
         os.remove(tmp)
     if rep is None:
         res = {"error": why}
-        json.dump(res, open(key, "w"))  # cached too: retried only when the family changes
+        if deadline is None or time.monotonic() < deadline - 30:  # a timeout caused by the budget is retried next build
+            json.dump(res, open(key, "w"))  # cached too: retried only when the family changes
         return fam, res
     fails = set(rep["fail"])
     res = {"fail": len(fails), "fail_checks": sorted(fails), "verdict": verdict(fails), "tool": rep["tool"]}
@@ -76,7 +82,8 @@ def check_one(gf, fam, sha, cache_dir, timeout):
     return fam, res
 
 
-def run(gf, work, cache_dir, jobs=4, timeout=900):
+def run(gf, work, cache_dir, jobs=4, timeout=900, deadline=None):
+    """deadline (time.monotonic): families not checked by then are left for the next build."""
     triage = json.load(open(os.path.join(work, "triage.json")))
     hist = json.load(open(os.path.join(work, "family_history.json")))
     fams = candidates(triage)
@@ -84,7 +91,7 @@ def run(gf, work, cache_dir, jobs=4, timeout=900):
     checkout(gf, fams)
     out = {}
     with cf.ThreadPoolExecutor(max_workers=jobs) as ex:
-        futs = [ex.submit(check_one, gf, f, (hist["last_binary"].get(f) or [None, None])[1], cache_dir, timeout) for f in fams]
+        futs = [ex.submit(check_one, gf, f, (hist["last_binary"].get(f) or [None, None])[1], cache_dir, timeout, deadline) for f in fams]
         for fu in cf.as_completed(futs):
             try:
                 fam, res = fu.result()

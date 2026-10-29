@@ -53,7 +53,13 @@ def main():
     ap.add_argument("--no-submitter", action="store_true", help="hide submitter profiles in the submissions report")
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--update-url", default=os.environ.get("UPDATE_URL", ""))
+    ap.add_argument("--time-budget", type=float, default=0,
+                    help="minutes; QA not done by then is left for the next build (results are cached)")
     a = ap.parse_args()
+    start = time.monotonic()
+    budget = a.time_budget * 60
+    qa_deadline = start + budget * 0.5 if budget else None
+    subs.QA_DEADLINE = start + budget * 0.9 if budget else None
     os.makedirs(a.work, exist_ok=True)
 
     step("google/fonts history")
@@ -69,8 +75,9 @@ def main():
 
     if not a.skip_qa:
         step("QA on fixable bugs")
-        res = qa.run(a.gf, a.work, os.path.join(a.cache, "qa"), jobs=a.jobs)
-        print(len(res), "families checked")
+        res = qa.run(a.gf, a.work, os.path.join(a.cache, "qa"), jobs=a.jobs, deadline=qa_deadline)
+        left = sum(1 for r in res.values() if r.get("retry"))
+        print(len(res) - left, "families checked", f"({left} left for the next build)" if left else "")
 
     step("export")
     meta = export.run(a.work, os.path.join(a.site, "data"), {"update_url": a.update_url})
