@@ -84,6 +84,8 @@ def main():
     print(meta)
 
     if not a.skip_submissions:
+        step("designers already on Google Fonts")
+        subs.load_designer_index(a.gf)
         step("submissions report")
         sargs = argparse.Namespace(jobs=a.jobs, checker="auto", cache=os.path.join(a.cache, "gf-submissions"),
                                    out=os.path.join(a.site, "submissions.html"), issues_json=a.issues_json,

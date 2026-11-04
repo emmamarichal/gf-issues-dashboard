@@ -89,6 +89,28 @@ button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:
 .card.gone{opacity:.42;border-style:dashed}
 .bar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
 .footer pre{white-space:pre-wrap;max-height:300px;overflow:auto;background:var(--soft);padding:10px;border-radius:8px}
+.prop{margin:14px 0 0;padding:10px 14px;border-radius:10px;border:1px solid var(--line);border-left:5px solid var(--muted);background:var(--soft)}
+.prop b{font-size:15px;font-weight:600}
+.prop .why{font-size:13px;margin-top:3px}
+.prop .why .g{color:var(--good)}.prop .why .x{color:var(--bad)}
+.prop.soon{border-left-color:var(--good)}.prop.soon b{color:var(--good)}
+.prop.later{border-left-color:var(--accent)}.prop.later b{color:var(--accent)}
+.prop.changes{border-left-color:var(--warn)}.prop.changes b{color:var(--warn)}
+.prop.look{border-left-color:var(--bad)}.prop.look b{color:var(--bad)}
+.counts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.counts button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.counts button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.proofs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.proofs details{margin:0;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--bg)}
+.proofs details[open]{flex-basis:100%}
+.proofs .pt{line-height:1.45;overflow-wrap:anywhere;padding:6px 0}
+.proofs .tools{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:4px}
+.proofs .tools input[type=range]{vertical-align:middle;width:130px}
+.olines{overflow-x:auto;padding:4px 0}
+.olines svg{display:block;max-width:none}
+.olines .o{fill:color-mix(in srgb,var(--ink) 10%,transparent);stroke:var(--ink);stroke-width:1px;vector-effect:non-scaling-stroke}
+.olines .p{fill:none;stroke:var(--accent);stroke-width:5px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.olines .b{stroke:var(--line);stroke-width:1px;vector-effect:non-scaling-stroke}
 @media (max-width:640px){.head{flex-direction:column}.spec .l0{font-size:32px}}
 </style>
 </head>
@@ -101,10 +123,30 @@ button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:
   <div class="bar">
     <span class="progress" id="progress"></span>
     <input type="search" id="q" placeholder="Filter (name, author, script…)" aria-label="Filter submissions">
-    <label>Sort <select id="sort"><option value="score">Score</option><option value="old">Oldest first</option><option value="new">Newest first</option></select></label>
+    <label>Sort <select id="sort">
+      <option value="rec">Recommendation (ready to publish first)</option>
+      <option value="score">Score</option>
+      <option value="langs">Character set (most languages)</option>
+      <option value="quality">Technical quality (fewest FAILs, clean outlines)</option>
+      <option value="designer">Known designer (families on Google Fonts)</option>
+      <option value="outlines">Outline quality</option>
+      <option value="sources">Sources and repo structure</option>
+      <option value="ai">Fewest AI signals</option>
+      <option value="followup">Most recently followed up by the submitter</option>
+      <option value="activity">Recent activity</option>
+      <option value="new">Newest first</option>
+      <option value="old">Oldest first</option>
+    </select></label>
+    <label>AI <select id="aiFilter">
+      <option value="">All</option>
+      <option value="design">AI used to design the glyphs, or suspected</option>
+      <option value="technical">AI for technical work only</option>
+      <option value="none">No AI mentioned</option>
+    </select></label>
     <label><input type="checkbox" id="hideDone"> Hide treated</label>
     <button type="button" id="resetTicks" hidden>Reset ticks</button>
   </div>
+  <div class="counts" id="counts"></div>
   <div id="cards"></div>
   <div class="footer" id="footer"></div>
 </div>
@@ -264,22 +306,37 @@ function outlineBox(it) {
 function aiBox(it) {
   const a = it.ai || {};
   const b = el('div', {class: 'box'}, el('h3', {text: 'AI'}));
-  const cls = {'Disclosed AI use': 'warn', 'AI mentioned': 'warn', 'Several signals': 'bad', 'One signal': 'warn', 'States no AI used': 'good', 'No signal found': 'good'}[a.verdict];
-  b.append(el('p', {}, chip(a.verdict || '—', cls)));
-  if (a.disclosure) b.append(el('blockquote', {text: a.disclosure}));
-  (a.mentions || []).forEach((m) => b.append(el('blockquote', {text: m})));
+  const cls = {design: 'bad', suspected: 'bad', unclear: 'warn', technical: 'good', none: 'good'}[a.kind];
+  b.append(el('p', {}, chip(a.kind_label || a.verdict || '—', cls)));
+  const quotes = [...(a.design || []), ...(a.denied || []), ...(a.technical || [])].slice(0, 4);
+  quotes.forEach((m) => b.append(el('blockquote', {text: m})));
+  if (!quotes.length) (a.mentions || []).forEach((m) => b.append(el('blockquote', {text: m})));
   if (a.reasons && a.reasons.length) b.append(el('ul', {class: 'tight small'}, a.reasons.map((r) => el('li', {text: r}))));
   const tools = (it.fonts || {}).tools || [];
   if (tools.length) b.append(el('p', {class: 'small', text: 'Tools in font names/tables: ' + tools.join(', ')}));
-  b.append(el('p', {class: 'small', text: 'Heuristic only: disclosure, wording, outline and account signals. Check the specimen yourself.'}));
+  b.append(el('p', {class: 'small', text: 'Read sentence by sentence: AI that drew, generated or expanded glyphs (or an image generator) counts as design; build, QA, docs or site work as technical. Suspected: no clear statement, but auto-traced-looking outlines or several account signals. Heuristic only: check the specimen yourself.'}));
   return b;
 }
 
+function designerInfo(it) {
+  const d = it.designer || {};
+  const p = el('div', {style: 'margin-top:8px'});
+  const names = (d.names || []).join(', ');
+  if (!d.index) return p.append(el('p', {class: 'small', text: `Designer in the fonts: ${names || '—'} (Google Fonts catalogue not checked)`})), p;
+  if (d.count) {
+    p.append(el('p', {}, chip(`Known designer: ${d.count} famil${d.count === 1 ? 'y' : 'ies'} on Google Fonts`, 'good')),
+      el('p', {class: 'small', text: `${d.matched.join(', ')}: ` + d.families.map(([f, dt]) => `${f}${dt ? ' (' + dt.slice(0, 4) + ')' : ''}`).join(', ')}));
+  } else {
+    p.append(el('p', {class: 'small', text: `Designer in the fonts: ${names || '—'} · no family on Google Fonts under ${names ? 'this name' : 'any name found'}`}));
+  }
+  return p;
+}
+
 function submitterBox(it) {
-  const b = el('div', {class: 'box'}, el('h3', {text: 'Submitter'}));
+  const b = el('div', {class: 'box'}, el('h3', {text: 'Submitter & designer'}));
   const s = it.submitter;
-  b.append(el('p', {}, link('https://github.com/' + it.author, '@' + it.author), it.author_assoc && it.author_assoc !== 'NONE' ? ' · ' + it.author_assoc.toLowerCase() : ''));
-  if (!s) return b.append(el('p', {class: 'small', text: 'Profile not fetched (offline mode).'})), b;
+  b.append(el('p', {}, link('https://github.com/' + it.author, '@' + it.author), s && s.name ? ' · ' + s.name : '', it.author_assoc && it.author_assoc !== 'NONE' ? ' · ' + it.author_assoc.toLowerCase() : ''));
+  if (!s) return b.append(el('p', {class: 'small', text: 'Profile not fetched (offline mode).'}), designerInfo(it)), b;
   const prev = (s.gf_items || []).filter((x) => x.number !== it.number);
   const acc = prev.filter((x) => x.labels.some((l) => l === 'II Accepted' || l === '--- Live') || (x.is_pr && x.state === 'closed'));
   b.append(kv([
@@ -291,7 +348,10 @@ function submitterBox(it) {
     s.orgs && s.orgs.length && ['Orgs', s.orgs.join(', ')],
     (it.repo || {}).owner_info && ['Repo owner', `${it.repo.owner_info.login} (organization, ${it.repo.owner_info.repos} repos)`],
     ['google/fonts history', `${prev.length} other issue(s)/PR(s), ${acc.length} accepted or merged`],
+    it.engagement && ['On this issue', `${it.engagement.comments} comment(s), ${it.engagement.followups} follow-up(s)` +
+      (it.engagement.team_comments ? `, answered ${it.engagement.answered} of ${it.engagement.team_comments} team comment(s)` : '')],
   ]));
+  b.append(designerInfo(it));
   if (prev.length) b.append(el('ul', {class: 'tight small'}, prev.slice(0, 6).map((x) => el('li', {}, link(x.url, `#${x.number} ${x.title}`), ` (${x.state}${x.labels.length ? ', ' + x.labels.filter((l) => /^II |^I |Live/.test(l)).join(', ') : ''})`))));
   if (!prev.length && s.created && daysSince(s.created) < 90 && (s.public_repos || 0) <= 2) b.append(el('p', {}, chip('New to GitHub', 'warn')));
   return b;
@@ -312,6 +372,92 @@ function scoreBox(it, rerender) {
   return b;
 }
 
+const LEVELS = {soon: 'Publish soon', later: 'Publish, schedule for later', changes: 'Ask the designer for changes', look: 'Look closer before deciding', info: 'Missing information'};
+const AI_FILTER = {design: ['design', 'suspected'], technical: ['technical'], none: ['none']};
+const AI_RISK = {none: 0, technical: 1, unclear: 2, suspected: 3, design: 4};
+let levelFilter = '';
+
+function proposalBox(it) {
+  const p = it.proposal;
+  if (!p) return null;
+  const why = el('div', {class: 'why'});
+  (p.good || []).forEach((g, i) => why.append(i ? ' · ' : '', el('span', {class: 'g', text: '✓ ' + g})));
+  (p.bad || []).forEach((b, i) => why.append((i || (p.good || []).length) ? ' · ' : '', el('span', {class: 'x', text: '✗ ' + b})));
+  return el('div', {class: 'prop ' + p.level, title: 'Suggestion from the automatic checks: you decide'}, el('b', {text: p.label}), why);
+}
+
+function proofText(it, key, size, extra) {
+  const f = it.fonts || {};
+  const fam = 'gfs-' + it.number;
+  const wrap = el('div');
+  const text = el('div', {class: 'pt', style: `font-family:"${fam}",var(--font);font-size:${size}px`});
+  DATA.meta.proofs[key].split('\n').forEach((line) => text.append(el('div', {text: line})));
+  const tools = el('div', {class: 'tools'});
+  const r = el('input', {type: 'range', min: 12, max: 72, value: size, 'aria-label': 'Size'});
+  const v = el('span', {text: size + ' px'});
+  r.addEventListener('input', () => { text.style.fontSize = r.value + 'px'; v.textContent = r.value + ' px'; });
+  tools.append(el('label', {}, v, r));
+  if (extra) extra(text, tools);
+  const miss = (f.proof_missing || {})[key];
+  if (miss) tools.append(el('span', {class: 'err', text: 'Not in the font: ' + miss}));
+  wrap.append(text, tools);
+  return wrap;
+}
+
+function outlineView(it) {
+  const o = (it.fonts || {}).outline_proof;
+  const wrap = el('div');
+  if (!o) return wrap.append(el('p', {class: 'small', text: 'No outlines available.'})), wrap;
+  const NS = 'http://www.w3.org/2000/svg';
+  const H = o.asc - o.desc;
+  const box = el('div', {class: 'olines', style: 'font-size:100px'});
+  o.lines.forEach((l) => {
+    if (!l.w) return;
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${l.w} ${H}`);
+    svg.style.width = (l.w / o.upm).toFixed(3) + 'em'; svg.style.height = (H / o.upm).toFixed(3) + 'em';
+    const base = document.createElementNS(NS, 'line');
+    base.setAttribute('class', 'b'); base.setAttribute('x1', 0); base.setAttribute('x2', l.w); base.setAttribute('y1', o.asc); base.setAttribute('y2', o.asc);
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('class', 'o'); path.setAttribute('d', l.d);
+    const pts = document.createElementNS(NS, 'path'); pts.setAttribute('class', 'p'); pts.setAttribute('d', l.p);
+    svg.append(base, path, pts);
+    box.append(svg);
+  });
+  const tools = el('div', {class: 'tools'});
+  const r = el('input', {type: 'range', min: 50, max: 320, value: 100, 'aria-label': 'Size'});
+  const v = el('span', {text: '100 px'});
+  r.addEventListener('input', () => { box.style.fontSize = r.value + 'px'; v.textContent = r.value + ' px'; });
+  const cb = el('input', {type: 'checkbox', checked: true});
+  cb.addEventListener('change', () => box.querySelectorAll('.p').forEach((p) => { p.style.display = cb.checked ? '' : 'none'; }));
+  tools.append(el('label', {}, v, r), el('label', {}, cb, 'Points'),
+    el('span', {text: `${o.points} on-curve points (handles hidden) · ${(it.fonts || {}).primary || ''}, default instance`}));
+  const miss = o.lines.map((l) => l.missing).join('');
+  if (miss) tools.append(el('span', {class: 'err', text: 'Not in the font: ' + miss}));
+  wrap.append(box, tools);
+  return wrap;
+}
+
+function proofs(it) {
+  const f = it.fonts || {};
+  if (!f.specimen) return null;
+  const row = el('div', {class: 'proofs'});
+  const add = (title, build) => {
+    const d = el('details', {}, el('summary', {text: title}));
+    let done = false;
+    d.addEventListener('toggle', () => { if (d.open && !done) { done = true; d.append(build()); } });
+    row.append(d);
+  };
+  add('Spacing & kerning', () => proofText(it, 'spacing', 30, (text, tools) => {
+    const cb = el('input', {type: 'checkbox', checked: true});
+    cb.addEventListener('change', () => { text.style.fontKerning = cb.checked ? 'normal' : 'none'; });
+    tools.append(el('label', {}, cb, 'Kerning'));
+  }));
+  add('Outlines', () => outlineView(it));
+  add('Accents', () => proofText(it, 'accents', 24));
+  add('Symbols', () => proofText(it, 'symbols', 24));
+  return row;
+}
+
 function card(it) {
   const c = el('article', {class: 'card', id: 'issue-' + it.number});
   const render = () => {
@@ -325,6 +471,9 @@ function card(it) {
     it.bot && link(it.bot.url, 'Triage bot comment ↗'), it.last_comment && link(it.last_comment.url, `Last comment: ${it.last_comment.by}, ${it.last_comment.date} ↗`));
   const chips = el('div', {class: 'chips'});
   if (it.waiting_on) chips.append(chip('Waiting on ' + it.waiting_on, it.waiting_on === 'Google Fonts' ? 'warn' : ''));
+  const eg = it.engagement || {};
+  if (eg.last) chips.append(el('span', {class: 'chip' + (daysSince(eg.last) <= 30 ? ' warn' : '')}, link(eg.last_url,
+    `Submitter followed up ${daysSince(eg.last)} days ago` + (eg.followups ? ` · ${eg.followups} asking for news` : ''))));
   if (it.checklist && it.checklist.total) chips.append(chip(`Checklist ${it.checklist.done}/${it.checklist.total}`, it.checklist.done === it.checklist.total ? 'good' : 'bad'));
   (it.assignees || []).forEach((a) => chips.append(chip('Assigned: ' + a)));
   (it.labels || []).filter((l) => l !== 'II Submission').forEach((l) => chips.append(chip(l)));
@@ -336,8 +485,10 @@ function card(it) {
       el('h2', {}, el('a', {href: safeUrl(it.url), target: '_blank', rel: 'noopener', text: it.title})),
       el('div', {class: 'meta', text: `#${it.number} · opened ${it.created} (${days} days ago) by @${it.author} · ${it.comments_count ?? 0} comments`}),
       links, chips)));
+  c.append(proposalBox(it) || '');
   if (!it.error) {
     c.append(specimen(it));
+    c.append(proofs(it) || '');
     c.append(el('div', {class: 'grid'}, charsetBox(it), sourcesBox(it), qaBox(it), outlineBox(it), aiBox(it),
       DATA.meta.show_submitter === false ? null : submitterBox(it), scoreBox(it, render)));
   }
@@ -418,14 +569,39 @@ function updateProgress() {
 function applyFilters() {
   const q = document.getElementById('q').value.trim().toLowerCase();
   const hide = document.getElementById('hideDone').checked;
+  const aiF = document.getElementById('aiFilter').value;
   for (const it of DATA.items) {
     const hay = [it.title, it.author, it.number, ((it.fonts || {}).scripts || []).join(' '), ((it.repo || {}).name || '')].join(' ').toLowerCase();
-    nodes.get(it.number).hidden = (q && !hay.includes(q)) || (hide && isDone(it));
+    const aiOut = aiF ? !AI_FILTER[aiF].includes((it.ai || {}).kind || 'none') : false;
+    const lvOut = levelFilter && (it.proposal || {}).level !== levelFilter;
+    nodes.get(it.number).hidden = (q && !hay.includes(q)) || (hide && isDone(it)) || aiOut || lvOut;
   }
+  renderCounts();
 }
+function renderCounts() {
+  const box = document.getElementById('counts');
+  const n = {};
+  DATA.items.forEach((it) => { const l = (it.proposal || {}).level; if (l) n[l] = (n[l] || 0) + 1; });
+  box.replaceChildren(...[['', 'All', DATA.items.length], ...Object.keys(LEVELS).filter((k) => n[k]).map((k) => [k, LEVELS[k], n[k]])].map(([k, label, c]) =>
+    el('button', {type: 'button', 'aria-pressed': String(levelFilter === k), onclick: () => { levelFilter = k; applyFilters(); }}, `${label} · ${c}`)));
+}
+const SORTS = {   // each returns a value; cards are sorted by it, highest first, then by score
+  rec: (it) => -((it.proposal || {}).rank ?? 9),
+  score: (it) => totalScore(it),
+  langs: (it) => ((it.fonts || {}).languages || 0) * 100 + ((it.fonts || {}).glyphsets || []).filter((g) => g[1] >= 99.9).length,
+  quality: (it) => (it.qa ? 1000 - it.qa.fail.length * 10 - it.qa.error.length * 5 : 0) + (((it.fonts || {}).outlines || {}).score || 0) / 10,
+  designer: (it) => ((it.designer || {}).count || 0) * 10 + ((it.designer || {}).accepted || 0),
+  outlines: (it) => (((it.fonts || {}).outlines || {}).score ?? -1),
+  sources: (it) => (it.score.parts.find((p) => p[0] === 'Sources') || [0, 0])[1] * 10 + (it.score.parts.find((p) => p[0].startsWith('Licence')) || [0, 0])[1],
+  ai: (it) => -(AI_RISK[(it.ai || {}).kind] ?? 2),
+  followup: (it) => Date.parse((it.engagement || {}).last || '') || 0,
+  activity: (it) => Date.parse((it.last_comment || {}).date || it.updated || it.created) || 0,
+  new: (it) => it.number,
+  old: (it) => -it.number,
+};
 function sortCards() {
-  const how = document.getElementById('sort').value;
-  const items = DATA.items.slice().sort((a, b) => how === 'score' ? totalScore(b) - totalScore(a) : how === 'old' ? a.number - b.number : b.number - a.number);
+  const key = SORTS[document.getElementById('sort').value] || SORTS.rec;
+  const items = DATA.items.slice().sort((a, b) => (key(b) - key(a)) || (totalScore(b) - totalScore(a)));
   items.forEach((it) => cardsEl.append(nodes.get(it.number)));
 }
 
@@ -465,10 +641,13 @@ function sortCards() {
   document.getElementById('q').addEventListener('input', applyFilters);
   document.getElementById('hideDone').addEventListener('change', applyFilters);
   document.getElementById('sort').addEventListener('change', sortCards);
+  document.getElementById('aiFilter').addEventListener('change', applyFilters);
+  sortCards();
+  applyFilters();
   updateProgress();
   if (m.hosted && m.generated_iso) liveCheck(m);
   document.getElementById('footer').append(el('details', {}, el('summary', {text: 'Generation log'}), el('pre', {text: (m.log || []).join('\n')})),
-    el('p', {text: 'Score: character set /25, QA /20, outlines /15, sources /15, licence & repo structure /5, submitter activity /10, originality /10 (your rating). All automatic parts are heuristics.'}));
+    el('p', {text: 'Score: character set /25, QA /20, outlines /15, sources /15, licence & repo structure /5, submitter history /5, engagement on the issue /5, originality /10 (your rating). The recommendation uses character set, QA, outlines, designer history, licence, sources, checklist and AI signals. All automatic parts are heuristics: you decide.'}));
 })();
 </script>
 </body>

@@ -38,9 +38,15 @@ One card per issue labelled *II Submission* in the *Submissions to review* miles
 - glyphsets and languages covered, source format (.glyphs, UFO…), licence and Reserved Font Names;
 - QA results, outline quality, signs of AI-generated outlines and what the submitter disclosed;
 - the submitter's history on GitHub (foundry, first contribution…);
+- the submitter's engagement on the issue: comments, follow-ups asking for news, answers to the team;
+- whether the designer already has families on Google Fonts (from the designer and manufacturer names in the fonts, matched against every `METADATA.pb`);
+- **a suggested decision with its reasons**: *Publish soon* (complete character set, QA clean or nearly, clean outlines, known designer), *Publish, schedule for later*, *Ask the designer for changes*, *Look closer before deciding* (AI used to design the glyphs, auto-traced-looking outlines, duplicate or forked repository) or *Missing information*;
+- four foldout proofs drawn with the font itself: **spacing & kerning** (with a kerning switch), **outlines** (*Hamburgerfontsiv HAMBURGERFONTSIV 1234567890* drawn large with their on-curve points, for TrueType and CFF fonts), **accents** (every accented letter of GF Latin Core) and **symbols** (every punctuation mark and symbol of GF Latin Core, in sentences);
 - a score and a to-do list (decision, comment if information is missing, assignee, milestone, priority). Ticked cards fade out; the ticks are kept in your browser.
 
-Outline quality and AI signals are heuristics to help a reviewer, not verdicts.
+Sort the cards by recommendation, score, character set, technical quality, known designer, outline quality, sources, fewest AI signals, most recent follow-up by the submitter, recent activity or date. Filter by recommendation (the counters above the cards) and by AI use: *AI used to design the glyphs, or suspected*, *AI for technical work only* (build, QA, docs, site) or *No AI mentioned*. The AI statements are read sentence by sentence, and the sentences used are quoted on the card.
+
+The score adds up character set /25, QA /20, outlines /15, sources /15, licence and repo structure /5, submitter history /5, engagement on the issue /5, and your originality rating /10. Outline quality, AI signals and the suggested decision are heuristics to help a reviewer, not verdicts.
 
 ## Typo Guide Generator
 

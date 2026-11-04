@@ -124,7 +124,7 @@ def submitter_profile(login, cache):
                      "is_pr": "pull_request" in it, "labels": labels, "url": it["html_url"],
                      "created": it["created_at"][:10]})
     prof = {
-        "login": login, "type": u.get("type"), "created": (u.get("created_at") or "")[:10],
+        "login": login, "name": u.get("name") or "", "type": u.get("type"), "created": (u.get("created_at") or "")[:10],
         "public_repos": u.get("public_repos"), "followers": u.get("followers"),
         "company": u.get("company") or "", "blog": u.get("blog") or "",
         "orgs": [o["login"] for o in orgs], "gf_total": s.get("total_count", 0), "gf_items": hist,
@@ -488,6 +488,8 @@ def analyze_fonts(d, font_paths):
     fam = name.getBestFamilyName() or ""
     out["family_name"] = fam
     out["version"] = (name.getDebugName(5) or "")[:60]
+    out["designer"] = (name.getDebugName(9) or "")[:200]
+    out["manufacturer"] = (name.getDebugName(8) or "")[:200]
     if "fvar" in prim:
         out["axes"] = [{"tag": a.axisTag, "min": a.minValue, "def": a.defaultValue, "max": a.maxValue} for a in prim["fvar"].axes]
     out["styles"] = sorted({(f["name"].getBestSubFamilyName() or "") for _, f in fonts})
@@ -533,11 +535,166 @@ def analyze_fonts(d, font_paths):
         out["outlines"] = outline_stats(prim)
     except Exception as e:
         out.setdefault("errors", []).append(f"outlines: {e}")
+    prim_cmap = set((prim.getBestCmap() or {}).keys())
+    out["proof_missing"] = {k: "".join(sorted({c for c in v if not c.isspace() and ord(c) not in prim_cmap}))
+                            for k, v in PROOFS.items()}
+    try:
+        out["outline_proof"] = outline_proof(prim)
+    except Exception as e:
+        out.setdefault("errors", []).append(f"outline proof: {e}")
     # specimen: subset of the primary font embedded in the page
     try:
         out["specimen"] = make_specimen(prim, cmap, fam, sample)
     except Exception as e:
         out.setdefault("errors", []).append(f"specimen: {e}")
+    return out
+
+
+# ----------------------------------------------------------------- proofs shown in each card
+PROOFS = {
+    "spacing": "AVATAR DIOXYDE TOTAL PAVARD AVADA KEDAVRA MONOXIDE ALTERNER NIGHTJAR CHIVVIED HRYVNIA TOTAL LOTTERIE "
+               "avatar monoxide attendre after chivvied hryvnia onyx pentoxyverine wyverns miromesnil reference "
+               "Avatar Tarte Panel Football",
+    # every accented letter of GF Latin Core
+    "accents": "Déjà vu où L’Haÿ : crème brûlée, pâte, fête, maïs, Noël, garçon, maître, ýmir, ñandú, así, però, così, "
+               "São João, põe, Köln, Mädchen, våg, smørrebrød, þú, Æðey, læs, Straße, cœur\n"
+               "Łódź, gęś, żółć, Dvořák, čaj, šťastný, děkuji, žůžo, ďateľ, vŕba, ĺúbiť, kôň, koń, Győr, műtő, đak, ćevapi, "
+               "ğüneş, ışık, Iași, țară, Rīga, māja, ģērbs, ķēķis, ļoti, ņem, ūdens, įėjo, ąžuolas, ųsai, ċerv, ġbejna, ħobż, "
+               "ŵyl, tŷ, ẁẃẅỳ\n"
+               "ÀÁÂÃÄÅ ÆÇÈÉÊË ÌÍÎÏ ÐÑÒÓÔÕÖØ ŒÙÚÛÜÝÞẞŸ ĀĂĄĆĊČĎĐĒĖĘĚĞĠĢĦĪĮİĶĹĻĽŁŃŅŇŐŔŘŚŞŠȘŤȚŪŮŰŲŴŶŹŻŽ ẀẂẄỲ",
+    # every punctuation mark and symbol of GF Latin Core
+    "symbols": "Tickets cost $25, €23.50, £19 or ¥3,500 — that’s 15% off! Open 9–5; email “hello@type.studio” "
+               "(subject: #42 & “Fonts”).\n"
+               "A 12\" screen, 5'9\" tall: 3 × 4 ÷ 2 = 6, 7 − 2 + 1 < 9 > 5 · 20 °C · §12 ¶3 … [a/b] {c|d} ~e_f\\g ^h "
+               "*well-known* • © 2026 Studio® Fonts™ 50¢ ¿Qué? ¡Sí! «Bonjour» ‹oui› „Hallo“ ‚ja‘ ‘yes’",
+}
+OUTLINE_LINES = ["Hamburgerfontsiv", "HAMBURGERFONTSIV", "1234567890"]
+
+
+def outline_proof(font, lines=OUTLINE_LINES):
+    """Glyph outlines in font units for an SVG view: one path per line, plus its on-curve points (no handles).
+    Works for TrueType (quadratic) and CFF/CFF2 (cubic) outlines, on the default instance."""
+    from fontTools.pens.recordingPen import DecomposingRecordingPen
+    gs = font.getGlyphSet()
+    cmap = font.getBestCmap() or {}
+    hmtx = font["hmtx"].metrics
+    asc, desc = font["hhea"].ascent, font["hhea"].descent
+    if asc - desc <= 0:
+        asc, desc = font["head"].yMax, font["head"].yMin
+    out = {"upm": font["head"].unitsPerEm, "asc": asc, "desc": desc, "lines": [], "points": 0}
+    for text in lines:
+        x, d, pts, missing = 0, [], [], []
+        P = lambda pt: f"{round(x + pt[0])} {round(asc - pt[1])}"
+        for ch in text:
+            g = cmap.get(ord(ch))
+            if g is None:
+                missing.append(ch)
+                continue
+            pen = DecomposingRecordingPen(gs)
+            try:
+                gs[g].draw(pen)
+            except Exception:
+                missing.append(ch)
+                continue
+            for op, args in pen.value:
+                if op == "moveTo":
+                    d.append("M" + P(args[0])); pts.append(P(args[0]))
+                elif op == "lineTo":
+                    d.append("L" + P(args[0])); pts.append(P(args[0]))
+                elif op == "curveTo":
+                    d.append("C" + " ".join(P(a) for a in args)); pts.append(P(args[-1]))
+                elif op == "qCurveTo":
+                    offs = list(args[:-1])
+                    if args[-1] is None:  # contour without on-curve points: start between the last and first
+                        loop = offs + offs[:1]
+                        mid = lambda a, b: ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+                        d.append("M" + P(mid(offs[-1], offs[0])))
+                        for i, o in enumerate(offs):
+                            d.append("Q" + P(o) + " " + P(mid(o, loop[i + 1])))
+                        continue
+                    on = args[-1]
+                    if not offs:
+                        d.append("L" + P(on))
+                    for i, o in enumerate(offs):  # implied on-curve points between off-curves are not drawn as points
+                        end = on if i == len(offs) - 1 else ((o[0] + offs[i + 1][0]) / 2, (o[1] + offs[i + 1][1]) / 2)
+                        d.append("Q" + P(o) + " " + P(end))
+                    pts.append(P(on))
+                elif op == "closePath":
+                    d.append("Z")
+            x += hmtx.get(g, (0, 0))[0]
+        # points as one SVG path of zero-length segments, drawn as round dots
+        out["lines"].append({"w": round(x), "d": "".join(d), "p": "".join("M" + q + "h0" for q in pts), "missing": "".join(missing)})
+        out["points"] += len(pts)
+    return out
+
+
+def norm_name(n):
+    import unicodedata as ud
+    n = ud.normalize("NFKD", n or "")
+    return re.sub(r"[^a-z0-9]", "", "".join(c for c in n if not ud.combining(c)).lower())
+
+
+def split_names(s):
+    return [x.strip() for x in re.split(r"\s*(?:,|&|;|/|\+|\band\b|\bwith\b)\s*", s or "", flags=re.I) if x.strip()]
+
+
+GENERIC_NAMES = {"", "multipledesigners", "unknown", "various", "designer", "none", "google", "googlefonts"}
+DESIGNERS = {}  # normalised designer name -> [[family, date added], ...]
+
+
+def load_designer_index(gf):
+    """Families per designer, from the METADATA.pb files of a google/fonts clone (blobless clones are fine)."""
+    DESIGNERS.clear()
+    try:
+        subprocess.run(["git", "-C", gf, "sparse-checkout", "set", "--no-cone", "/ofl/*/METADATA.pb", "/apache/*/METADATA.pb",
+                        "/ufl/*/METADATA.pb"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", gf, "checkout", "-q", "main"], check=True, capture_output=True, timeout=1800)
+        subprocess.run(["git", "-C", gf, "merge", "-q", "--ff-only", "origin/main"], capture_output=True, timeout=1800)
+    except Exception as e:
+        log(f"designer index: could not check out METADATA.pb files ({e})")
+        return 0
+    for lic in ("ofl", "apache", "ufl"):
+        root = os.path.join(gf, lic)
+        for fam in sorted(os.listdir(root)) if os.path.isdir(root) else []:
+            p = os.path.join(root, fam, "METADATA.pb")
+            if not os.path.exists(p):
+                continue
+            t = open(p, encoding="utf-8", errors="replace").read()
+            name = (re.search(r'^name:\s*"([^"]*)"', t, re.M) or [None, fam])[1]
+            date = (re.search(r'^date_added:\s*"([^"]*)"', t, re.M) or [None, ""])[1]
+            for who in split_names((re.search(r'^designer:\s*"([^"]*)"', t, re.M) or [None, ""])[1]):
+                k = norm_name(who)
+                if k not in GENERIC_NAMES and len(k) >= 4:
+                    DESIGNERS.setdefault(k, []).append([name, date])
+    log(f"designer index: {len(DESIGNERS)} designers in google/fonts")
+    return len(DESIGNERS)
+
+
+def designer_history(rec):
+    """Which of the names in the fonts (designer, manufacturer) or the submitter's profile already have families on GF."""
+    f = rec.get("fonts") or {}
+    # first designer only: later names are often the authors of the font a project is based on
+    names = split_names(f.get("designer"))[:1] + split_names(f.get("manufacturer"))[:1]
+    prof = rec.get("submitter") or {}
+    if prof.get("name"):
+        names.append(prof["name"])
+    names = list(dict.fromkeys(names))
+    seen, matched, fams = set(), [], {}
+    for n in names:
+        k = norm_name(n)
+        if k in seen or k in GENERIC_NAMES or len(k) < 4:
+            continue
+        seen.add(k)
+        if k in DESIGNERS:
+            matched.append(n)
+            for fam, date in DESIGNERS[k]:
+                fams[fam] = date
+    out = {"names": [n for n in names if norm_name(n) not in GENERIC_NAMES][:4], "matched": matched,
+           "families": sorted(fams.items(), key=lambda x: x[1], reverse=True)[:12], "count": len(fams),
+           "index": bool(DESIGNERS)}
+    prev = [i for i in prof.get("gf_items", []) if i["number"] != rec["number"]]
+    out["accepted"] = len([i for i in prev if any(l in ("II Accepted", "--- Live") for l in i["labels"])
+                           or (i["is_pr"] and i["state"] == "closed")])
     return out
 
 
@@ -551,7 +708,7 @@ def make_specimen(font, cmap, fam, sample):
     if sample:
         lines.append(sample)
     grid = [chr(c) for c in sorted(cmap) if c > 0x20 and not (0x300 <= c <= 0x36F)][:480]
-    text = "".join(lines) + "".join(grid)
+    text = "".join(lines) + "".join(grid) + "".join(PROOFS.values())
     buf = io.BytesIO()
     font.save(buf)
     f2 = TTFont(io.BytesIO(buf.getvalue()))
@@ -665,6 +822,56 @@ DERIV_RX = re.compile(r"\b(derivative of|based on|fork(?:ed)? (?:of|from)|remix(
                       r"extension of|adapted from|built (?:on|upon)|expanded from|revival of)\b", re.I)
 
 
+# What AI was used for, read clause by clause. "design": AI drew, generated or expanded the glyphs.
+AI_DESIGN_RX = re.compile(r"\b(glyphs?|outlines?|letterforms?|character set|characters|glyph geometry|geometry|shapes|"
+                          r"forms|draw\w*|drew|construct\w*|expan(?:d|sion|ded)|character sheet|kern\w*|spacing|vectori[sz]\w*|"
+                          r"designed the (?:font|typeface|letters))\b", re.I)
+AI_TECH_RX = re.compile(r"\b(build\w*|tooling|tools? for|scripts?|scripting|qa|quality assurance|fontbakery|fontspector|"
+                        r"documentation|docs|readme|repo\w*|specimen|website|site|pipeline|engineering|metadata|name table|"
+                        r"stat|metrics|automation|cleanup|planning|coding|code review|conformance|compliance|packaging|ci)\b", re.I)
+AI_IMAGE_RX = re.compile(r"\b(midjourney|dall[ -]?e|stable diffusion|gpt[- ]image|firefly|image[- ]generat\w+|"
+                         r"text[- ]to[- ]image)\b", re.I)
+AI_NEG_RX = re.compile(r"\b(not|no|never|none|without)\b", re.I)
+TEMPLATE_AI_RX = re.compile(r"commit to clearly disclosing if AI tools were used", re.I)
+
+
+def ai_use(text):
+    """Classify the AI statements of a submission: design / technical / unclear / none, with the clauses used."""
+    clauses = []
+    for para in re.split(r"\n\s*\n", text or ""):
+        if not AI_RX.search(para) and not AI_IMAGE_RX.search(para):
+            continue
+        para = re.sub(r"\n(?!\s*(?:[-*•]|\d+\.)\s)", " ", para)   # re-join lines wrapped mid-sentence
+        for c in re.split(r"(?<=[.!?;])\s+|\n+|;\s*", para):
+            c = re.sub(r"\s+", " ", c).strip(" -*•")
+            if c and (AI_RX.search(c) or AI_IMAGE_RX.search(c)) and not TEMPLATE_AI_RX.search(c):
+                clauses.append(c[:300])
+    design, tech, denied = [], [], []
+    for c in dict.fromkeys(clauses):
+        if AI_IMAGE_RX.search(c):
+            design.append(c)
+        elif AI_DESIGN_RX.search(c) and AI_NEG_RX.search(c):
+            denied.append(c)          # "No glyphs were AI-generated", "not used to draw…"
+        elif AI_DESIGN_RX.search(c):
+            design.append(c)
+        elif AI_TECH_RX.search(c):
+            tech.append(c)
+    image = any(AI_IMAGE_RX.search(c) for c in design)
+    if design and (image or not denied):
+        kind = "design"
+    elif tech or denied:
+        kind = "technical"
+    elif clauses:
+        kind = "unclear"
+    else:
+        kind = "none"
+    return {"kind": kind, "design": design[:3], "technical": tech[:3], "denied": denied[:2]}
+
+
+AI_KINDS = {"design": "AI used to design the glyphs", "suspected": "AI design suspected",
+            "technical": "AI for technical work only", "unclear": "AI mentioned, use unclear", "none": "No AI mentioned"}
+
+
 def snippets(rx, text, n=2, width=110):
     out = []
     for m in rx.finditer(text):
@@ -704,6 +911,7 @@ def analyse(issue, args, cache, offline):
         bot = next((c for c in reversed(cm) if c["user"]["login"].endswith("[bot]") and "triage" in (c["body"] or "").lower()), None)
         if bot:
             rec["bot"] = {"url": bot["html_url"], "date": bot["created_at"][:10], "body": bot["body"][:4000]}
+        rec["engagement"] = engagement(cm, rec["author"])
         human = [c for c in cm if not c["user"]["login"].endswith("[bot]")]
         if human:
             last = human[-1]
@@ -775,13 +983,37 @@ def analyse(issue, args, cache, offline):
     else:
         verdict = "No signal found"
     ai["verdict"], ai["reasons"] = verdict, reasons
+    ai.update(ai_use(text_for_signals))
+    if ai["kind"] in ("unclear", "none") and (verdict == "Several signals" or (ol.get("autotrace", 0) >= 2 and ai["kind"] == "unclear")):
+        ai["kind"] = "suspected"      # no clear statement, but the outlines or the account look like it
+    ai["kind_label"] = AI_KINDS[ai["kind"]]
     rec["ai"] = ai
     rec["derivative"] = snippets(DERIV_RX, text_for_signals, 2)
     if repo and repo.get("fork"):
         rec["derivative"].insert(0, f"Repository is a GitHub fork of {repo.get('parent')}")
+    rec["designer"] = designer_history(rec)
     rec["score"] = score(rec)
     rec["draft_comment"] = draft_comment(rec)
     return rec
+
+
+FOLLOWUP_RX = re.compile(r"\b(any (?:news|updates?|progress|feedback)|update\?|status|ping|follow(?:ing)?[- ]?up|bump|reminder|"
+                         r"still (?:waiting|interested|pending)|checking in|is there anything|when (?:will|can|could)|"
+                         r"gentle|kindly)\b", re.I)
+TEAM = ("OWNER", "MEMBER", "COLLABORATOR")
+
+
+def engagement(comments, author):
+    """How the submitter takes part in the issue: comments, follow-ups, answers to the team."""
+    me = author.lower()
+    own = [c for c in comments if c["user"]["login"].lower() == me]
+    team = [c for c in comments if c.get("author_association") in TEAM and c["user"]["login"].lower() != me]
+    follow = [c for c in own if FOLLOWUP_RX.search(c.get("body") or "")]
+    answered = sum(1 for t in team if any(o["created_at"] > t["created_at"] for o in own))
+    return {"comments": len(own), "followups": len(follow), "team_comments": len(team), "answered": answered,
+            "last": own[-1]["created_at"][:10] if own else None,
+            "last_followup": follow[-1]["created_at"][:10] if follow else None,
+            "last_url": own[-1]["html_url"] if own else None}
 
 
 # ----------------------------------------------------------------- score & comment
@@ -839,11 +1071,149 @@ def score(rec):
         accepted = [i for i in prev if any(l in ("II Accepted", "--- Live") for l in i["labels"]) or (i["is_pr"] and i["state"] == "closed")]
         sa += 4 if accepted else (2 if prev else 0)
         sa += 2 if (s.get("public_repos") or 0) >= 5 or s.get("company") or s.get("orgs") or (rec.get("repo") or {}).get("owner_info") else 0
-        parts.append(["Submitter activity", sa, 10, f"{len(prev)} other google/fonts issues/PRs, {len(accepted)} accepted or merged"])
+        parts.append(["Submitter history", round(sa / 2, 1), 5, f"{len(prev)} other google/fonts issues/PRs, {len(accepted)} accepted or merged"])
     else:
-        parts.append(["Submitter activity", 0, 10, "not fetched (offline mode)"])
+        parts.append(["Submitter history", 0, 5, "not fetched (offline mode)"])
+    e = rec.get("engagement")
+    if e is not None:
+        ep = min(2, e["comments"])                                  # takes part in the issue
+        if e["team_comments"]:
+            ep += 2 if e["answered"] else 0                         # answers the team
+        elif e["comments"]:
+            ep += 1
+        if e["last"] and (NOW.date() - dt.date.fromisoformat(e["last"])).days <= 90:
+            ep += 1                                                 # recently active
+        why = (f"{e['comments']} comment(s) by the submitter, {e['followups']} follow-up(s)"
+               + (f", answered {e['answered']}/{e['team_comments']} team comment(s)" if e["team_comments"] else "")
+               + (f", last {e['last']}" if e["last"] else ""))
+        parts.append(["Engagement on the issue", min(5, ep), 5, why])
+    else:
+        parts.append(["Engagement on the issue", 0, 5, "comments not fetched (offline mode)"])
     auto = round(sum(p[1] for p in parts), 1)
     return {"auto": auto, "auto_max": 90, "parts": parts}
+
+
+PROPOSALS = {  # level -> (label, rank used by the "Recommendation" sort)
+    "soon": ("Publish soon", 0),
+    "later": ("Publish, schedule for later", 1),
+    "changes": ("Ask the designer for changes", 2),
+    "look": ("Look closer before deciding", 3),
+    "info": ("Missing information", 4),
+}
+
+
+def proposal(rec):
+    """A suggested decision with its reasons. Heuristic: it orders the work, a person decides."""
+    f, ri, qa = rec.get("fonts") or {}, rec.get("repo_info") or {}, rec.get("qa")
+    good, bad = [], []
+    if rec.get("error"):
+        return {"level": "info", "label": PROPOSALS["info"][0], "rank": 4, "good": [], "bad": ["the analysis failed"]}
+    if not rec.get("repo"):
+        bad.append("no repository link in the issue")
+    elif not rec.get("repo_info"):
+        bad.append("the repository could not be read")
+    elif not f.get("files"):
+        bad.append("no font files in the repository")
+    if bad:
+        return {"level": "info", "label": PROPOSALS["info"][0], "rank": 4, "good": [], "bad": bad}
+    # character set
+    sets = {k: pct for k, pct, _ in f.get("glyphsets", [])}
+    full = [k for k, v in sets.items() if v >= 99.9]
+    non_latin = [k for k in full if not k.startswith(("GF_Latin", "GF_TransLatin", "GF_Phonetics"))]
+    langs = f.get("languages", 0)
+    latin_font = "Latn" in (f.get("scripts") or [])
+    core_ok = "GF_Latin_Core" in full
+    glyphs_ok = core_ok or (non_latin and not latin_font)
+    extra = [k for k in full if k in ("GF_Latin_Plus", "GF_Latin_Vietnamese", "GF_Latin_African", "GF_Latin_Beyond")]
+    glyphs_wide = glyphs_ok and (langs >= 350 or extra or (non_latin and core_ok))
+    shown = [k for k in full if k != "GF_Latin_Kernel" and "Historical" not in k]
+    shown.sort(key=lambda k: (k.startswith("GF_Latin"), k != "GF_Latin_Core", k))
+    sets_txt = ", ".join(k.replace("GF_", "").replace("_", " ") for k in shown[:3]) or "no complete GF glyphset"
+    if glyphs_wide:
+        good.append(f"wide character set ({sets_txt}, {langs} languages)")
+    elif glyphs_ok:
+        good.append(f"character set complete ({sets_txt}, {langs} languages)")
+    elif latin_font and not core_ok:
+        bad.append(f"GF Latin Core incomplete ({len(f.get('latin_core_missing') or [])}+ characters missing)")
+    else:
+        bad.append("no complete GF glyphset")
+    # technical quality
+    fails = len(qa["fail"]) if qa else None
+    ol = (f.get("outlines") or {})
+    olscore = ol.get("score")
+    if fails is None:
+        bad.append("QA not run yet")
+    elif fails == 0:
+        good.append(f"no FAIL ({qa['tool']})")
+    elif fails <= 3:
+        good.append(f"{fails} FAIL{'s' if fails > 1 else ''} to fix at onboarding")
+    else:
+        bad.append(f"{fails} FAILs ({qa['tool']})")
+    if qa and qa.get("glyph_coverage") == "FAIL" and not any("Latin Core" in b for b in bad):
+        bad.append("glyph coverage check FAILs")
+    if olscore is not None:
+        if ol.get("pixel"):
+            good.append("pixel / grid outlines")
+        elif olscore >= 75:
+            good.append(f"clean outlines ({olscore}/100)")
+        elif olscore < 55:
+            bad.append(f"outlines need work ({olscore}/100)")
+    tech_ok = fails is not None and fails <= 3 and (olscore is None or olscore >= 75 or ol.get("pixel"))
+    # designer
+    des = rec.get("designer") or {}
+    if des.get("count"):
+        fams = ", ".join(x[0] for x in des["families"][:3])
+        good.append(f"known designer: {des['count']} famil{'y' if des['count'] == 1 else 'ies'} on Google Fonts ({fams})")
+    elif des.get("accepted"):
+        good.append(f"submitter already has {des['accepted']} accepted submission(s)")
+    designer_known = bool(des.get("count") or des.get("accepted"))
+    # what the designer has to change
+    lic = ri.get("license") or {}
+    changes = []
+    if not ri.get("sources"):
+        changes.append("no editable sources")
+    if not lic.get("ofl11"):
+        changes.append("no OFL 1.1 licence")
+    if lic.get("rfn"):
+        changes.append("Reserved Font Name in OFL.txt")
+    cl = rec.get("checklist") or {}
+    if cl.get("total") and cl.get("done", 0) < cl["total"]:
+        changes.append(f"checklist {cl['done']}/{cl['total']}")
+    # reasons to look closer
+    ai = rec.get("ai") or {}
+    look = []
+    if ai.get("kind") == "design":
+        look.append("AI used to design the glyphs" + (" (image generator)" if any(AI_IMAGE_RX.search(c) for c in ai.get("design", [])) else ""))
+    elif ai.get("kind") == "suspected":
+        look.append("AI design suspected (no clear statement)")
+    ai_note = "AI mentioned: check how it was used" if ai.get("kind") == "unclear" else None
+    if ai.get("kind") == "technical":
+        good.append("AI used for technical work only")
+    if (ol.get("autotrace") or 0) >= 2:
+        look.append("outlines look auto-traced")
+    if rec.get("same_repo"):
+        look.append("same repository as " + ", ".join(f"#{n}" for n in rec["same_repo"]))
+    if (rec.get("repo") or {}).get("fork"):
+        look.append("repository is a fork")
+    if look:
+        level = "look"
+        bad = look + changes + bad
+    elif changes or (fails is not None and fails > 10) or (olscore is not None and olscore < 55 and not ol.get("pixel")) \
+            or (latin_font and not core_ok and not non_latin):
+        level = "changes"
+        bad = changes + bad
+    elif tech_ok and glyphs_ok and designer_known and not ai_note:
+        level = "soon"
+    else:
+        level = "later"
+        if not designer_known:
+            bad.append("new designer: no family on Google Fonts yet" if des.get("index") else "designer history unknown")
+    if ai_note:
+        bad.append(ai_note)
+    eng = rec.get("engagement") or {}
+    if eng.get("comments"):
+        good.append(f"submitter active on the issue ({eng['comments']} comment{'s' if eng['comments'] > 1 else ''}, last {eng['last']})")
+    return {"level": level, "label": PROPOSALS[level][0], "rank": PROPOSALS[level][1], "good": good, "bad": bad}
 
 
 def draft_comment(rec):
@@ -878,7 +1248,7 @@ def draft_comment(rec):
     if cl.get("unchecked"):
         items.append("Some requirements in the submission checklist are not ticked: " + "; ".join(cl["unchecked"][:3]))
     ai = rec.get("ai") or {}
-    if ai.get("verdict") in ("Several signals", "One signal", "AI mentioned") and not ai.get("disclosure"):
+    if ai.get("kind") in ("suspected", "unclear"):
         items.append("Could you tell us whether AI tools were used to create this project, and how?")
     if not items:
         return ""
@@ -951,7 +1321,8 @@ def generate(args):
             "offline": offline, "checker": args.checker, "previous": prev.get("date", "")[:16].replace("T", " "),
             "new": sorted(int(x) for x in now_ids - set(prev.get("items", {}))) if prev else [],
             "left": sorted(left, key=lambda x: -x["number"]), "label": LABEL, "milestone": MILESTONE,
-            "milestone_url": (ms or {}).get("html_url", ""), "log": LOG[-200:]}
+            "milestone_url": (ms or {}).get("html_url", ""), "log": LOG[-200:], "proofs": PROOFS,
+            "designer_index": len(DESIGNERS)}
     by_repo = collections.defaultdict(list)
     for r in recs:
         if r.get("repo"):
@@ -961,6 +1332,8 @@ def generate(args):
             others = [n for n in by_repo[r["repo"]["url"].lower()] if n != r["number"]]
             if others:
                 r["same_repo"] = sorted(others)
+    for r in recs:
+        r["proposal"] = proposal(r)
     recs.sort(key=lambda r: -r["score"]["auto"])
     out = build_report(recs, meta, args.out)
     log(f"report written: {out}")
@@ -1051,7 +1424,10 @@ def main():
     ap.add_argument("--update-url", help="link shown as 'Run an update now'")
     ap.add_argument("--no-submitter", action="store_true", help="don't fetch or show submitter profiles")
     ap.add_argument("--template", help="report template path")
+    ap.add_argument("--gf", help="a local google/fonts clone, to find designers who already have families on Google Fonts")
     args = ap.parse_args()
+    if args.gf:
+        load_designer_index(args.gf)
     args.out = args.out or os.path.join(args.cache, "submissions_report.html")
     global TEMPLATE
     TEMPLATE = args.template
