@@ -24,7 +24,8 @@ Options
 
 Needs: git, gh (logged in), python3 with fonttools, glyphsets, gflanguages
 (pip install fonttools glyphsets gflanguages brotli). fontspector or
-fontbakery for the QA column (optional).
+fontbakery for the QA column (optional). hrothgar for the similar-fonts
+panel (optional: the report works without it).
 """
 import argparse, base64, collections, concurrent.futures as cf, datetime as dt, hashlib, html, io, json, math
 import os, re, shutil, subprocess, sys, threading, time, traceback, urllib.parse, webbrowser
@@ -463,7 +464,59 @@ TOOLS = [("FontForge", r"fontforge"), ("Glyphs", r"\bglyphs\b(?! ?app\.js)"), ("
          ("potrace / autotrace", r"potrace|autotrace"), ("ttfautohint", r"ttfautohint")]
 
 
-def analyze_fonts(d, font_paths):
+SIMILAR_K = 5
+SIMILARITY = {"model": None, "error": None}
+SIMILARITY_LOCK = threading.Lock()
+
+
+def similarity_model():
+    """Load the hrothgar text-arm index and feature recognisers once, in any thread."""
+    if SIMILARITY["model"] is not None or SIMILARITY["error"] is not None:
+        return SIMILARITY["model"], SIMILARITY["error"]
+    with SIMILARITY_LOCK:
+        if SIMILARITY["model"] is None and SIMILARITY["error"] is None:
+            try:
+                from hrothgar.similarity.axis_combiner import _load_recognisers
+                from hrothgar.similarity.text_index import DEFAULT_INDEX_PATH, TextIndex
+                SIMILARITY["model"] = (_load_recognisers(), TextIndex.load(DEFAULT_INDEX_PATH))
+            except Exception as e:
+                SIMILARITY["error"] = f"{type(e).__name__}: {e}"
+        return SIMILARITY["model"], SIMILARITY["error"]
+
+
+def similar_fonts(path, cache=None, k=SIMILAR_K, family=None):
+    """The k Google Fonts families closest to one font file (hrothgar text-arm model).
+
+    ``family`` is the font's own family name; when it is already in the index, its row is
+    excluded so an update is compared with the other families, not with itself. Returns
+    {"results": [{"family", "score"}, ...]} or {"error": "..."}. Results are cached on the
+    font file's contents, so hourly rebuilds only measure fonts that changed.
+    """
+    model, error = similarity_model()
+    if error:
+        return {"error": error}
+    recognisers, index = model
+    try:
+        with open(path, "rb") as fh:
+            digest = hashlib.sha256(fh.read()).hexdigest()
+        key = f"similar:{k}:{family or ''}:{index.meta.get('created', '')}:{digest}"
+        if cache:
+            hit = cache.get(key, 24 * 30)
+            if hit is not None:
+                return hit
+        from hrothgar.googlefonts import StandaloneFont
+        from hrothgar.similarity.text_index import anchor_features
+        af = anchor_features(StandaloneFont(path), index, recognisers)
+        if family and index.family_index(family) is not None:
+            af.family = family
+        out = {"results": [{"family": name, "score": round(float(score), 4)}
+                           for name, score in index.rank(af, k=k)]}
+        return cache.put(key, out) if cache else out
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
+
+
+def analyze_fonts(d, font_paths, cache=None):
     from fontTools.ttLib import TTFont
     import glyphsets
     out = {"files": [os.path.basename(p) for p in font_paths]}
@@ -547,6 +600,12 @@ def analyze_fonts(d, font_paths):
         out["specimen"] = make_specimen(prim, cmap, fam, sample)
     except Exception as e:
         out.setdefault("errors", []).append(f"specimen: {e}")
+    # similar Google Fonts families (text-arm model, run on the primary font file)
+    sim = similar_fonts(os.path.join(d, prim_path), cache, family=fam)
+    if sim.get("error"):
+        out["similar_error"] = sim["error"]
+    else:
+        out["similar"] = sim["results"]
     return out
 
 
@@ -945,7 +1004,7 @@ def analyse(issue, args, cache, offline):
             rec["repo_info"] = {k: v for k, v in info.items() if k != "texts"}
             text_for_signals += "\n" + info["texts"]
             if info["fonts"]:
-                rec["fonts"] = analyze_fonts(d, info["fonts"])
+                rec["fonts"] = analyze_fonts(d, info["fonts"], cache)
                 text_for_signals += "\n" + rec["fonts"].pop("name_text", "")
                 rec["qa"] = run_qa(d, info["fonts"], args.checker, cache, head.get("sha", ""))
     # signals

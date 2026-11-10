@@ -35,6 +35,7 @@ When the page opens, it also asks GitHub which issues were closed or opened sinc
 One card per issue labelled *II Submission* in the *Submissions to review* milestone, updated every hour:
 
 - specimen, links to the issue and the source repository;
+- **similar fonts**: a sample of the submitted font next to the five Google Fonts families closest to it with the hrothgar text-arm model, each with its score, so the shapes can be compared at a glance;
 - glyphsets and languages covered, source format (.glyphs, UFO…), licence and Reserved Font Names;
 - QA results, outline quality, signs of AI-generated outlines and what the submitter disclosed;
 - the submitter's history on GitHub (foundry, first contribution…);
