@@ -89,7 +89,8 @@ def main():
         step("submissions report")
         sargs = argparse.Namespace(jobs=a.jobs, checker="auto", cache=os.path.join(a.cache, "gf-submissions"),
                                    out=os.path.join(a.site, "submissions.html"), issues_json=a.issues_json,
-                                   hosted=True, update_url=a.update_url, no_submitter=a.no_submitter, no_open=True)
+                                   hosted=True, update_url=a.update_url, no_submitter=a.no_submitter, no_open=True,
+                                   style_fonts=True)
         subs.TEMPLATE = os.path.join(HERE, "submissions_template.html")
         subs.generate(sargs)
 

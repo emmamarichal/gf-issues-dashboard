@@ -41,6 +41,7 @@ jobs:
             .cache/qa
             .cache/gf-submissions/json
             .cache/gf-submissions/last_run.json
+            .cache/gf-submissions/style_fonts
           key: build-${{ github.run_id }}
           restore-keys: build-
 

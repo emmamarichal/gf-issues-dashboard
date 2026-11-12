@@ -22,8 +22,8 @@ Options
                       instead of GitHub (no comments, profiles or repo metadata)
   --no-open           don't open the browser
 
-Needs: git, gh (logged in), python3 with fonttools, glyphsets, gflanguages
-(pip install fonttools glyphsets gflanguages brotli). fontspector or
+Needs: git, gh (logged in), python3 with fonttools, glyphsets, gflanguages, shaperglot
+(pip install fonttools glyphsets gflanguages shaperglot brotli). fontspector or
 fontbakery for the QA column (optional).
 """
 import argparse, base64, collections, concurrent.futures as cf, datetime as dt, hashlib, html, io, json, math
@@ -314,6 +314,50 @@ def languages():
     return _LANGS
 
 
+_SG = threading.local()
+_LANG_INFO = None
+
+
+def lang_info():
+    """gflanguages id -> (name, script, population, sample sentence, sample paragraph, historical)."""
+    global _LANG_INFO
+    if _LANG_INFO is None:
+        from gflanguages import LoadLanguages
+        _LANG_INFO = {lid: (l.name, l.script, l.population, l.sample_text.tester or l.sample_text.specimen_36 or "",
+                            l.sample_text.specimen_21 or "", l.historical, l.exemplar_chars.base or "")
+                      for lid, l in LoadLanguages().items()}
+    return _LANG_INFO
+
+
+def language_support(path):
+    """Languages the font supports according to shaperglot, the checker Google Fonts uses (fontspector, gftools):
+    every base and mark character of the orthography encoded and the marks attaching (auxiliary characters
+    are only a warning). Also the languages that nearly pass (80% or more). None if shaperglot is missing."""
+    try:
+        import shaperglot
+    except ImportError:
+        return None
+    if getattr(_SG, "langs", None) is None:
+        _SG.langs = shaperglot.Languages()
+    langs = _SG.langs
+    checker = shaperglot.Checker(path)
+    complete, partial = [], []
+    for lid in langs.keys():
+        try:
+            r = checker.check(langs[lid])
+        except Exception:
+            continue
+        level = r.support_level
+        if level in ("none", "indeterminate", "unsupported") and not (level == "unsupported" and r.score >= 80):
+            continue
+        # supported = no failing check; missing auxiliary characters or unattached auxiliary marks are only warnings
+        if level in ("complete", "supported") or not list(r.fails):
+            complete.append(lid)
+        else:
+            partial.append(lid)
+    return complete, partial
+
+
 def pick_primary(paths):
     def rank(p):
         n = os.path.basename(p).lower()
@@ -463,7 +507,7 @@ TOOLS = [("FontForge", r"fontforge"), ("Glyphs", r"\bglyphs\b(?! ?app\.js)"), ("
          ("potrace / autotrace", r"potrace|autotrace"), ("ttfautohint", r"ttfautohint")]
 
 
-def analyze_fonts(d, font_paths):
+def analyze_fonts(d, font_paths, styles=False):
     from fontTools.ttLib import TTFont
     import glyphsets
     out = {"files": [os.path.basename(p) for p in font_paths]}
@@ -503,12 +547,30 @@ def analyze_fonts(d, font_paths):
     except Exception as e:
         out["glyphsets"] = []
         out.setdefault("errors", []).append(f"glyphsets: {e}")
-    # languages
+    # languages: shaperglot on the primary font (what Google Fonts will list), else the exemplar characters
     by_script, supported = collections.Counter(), []
-    for lid, lname, script, pop, cps, sample in languages():
-        if cps <= cmap:
+    chars_only = [x for x in languages() if x[4] <= cmap]
+    out["languages_chars"] = len(chars_only)
+    sg = None
+    try:
+        sg = language_support(os.path.join(d, prim_path))
+    except Exception as e:
+        out.setdefault("errors", []).append(f"shaperglot: {e}")
+    info = lang_info()
+    if sg is not None:
+        complete, partial = sg
+        for lid in complete:
+            lname, script, pop, sample = info.get(lid, (lid, lid.split("_")[-1], 0, ""))[:4]
             by_script[script] += 1
             supported.append((pop, lid, lname, script, sample))
+        out["languages_method"] = "shaperglot"
+        out["languages_partial"] = len(partial)
+        out["languages_partial_top"] = [info.get(l, (l,))[0] for l in sorted(partial, key=lambda l: -info.get(l, ("", "", 0))[2])[:8]]
+    else:
+        for lid, lname, script, pop, cps, sample in chars_only:
+            by_script[script] += 1
+            supported.append((pop, lid, lname, script, sample))
+        out["languages_method"] = "exemplars"
     out["languages"] = sum(by_script.values())
     out["languages_by_script"] = by_script.most_common(8)
     from fontTools import unicodedata as ud
@@ -518,6 +580,8 @@ def analyze_fonts(d, font_paths):
     main = [s for s, n in scripts.most_common() if n >= 20]
     out["scripts"] = main[:6]
     non_latin = next((s for s in main if s != "Latn"), None)
+    # one tester per script other than Latin, with a line of Latin to compare
+    out["script_proofs"] = script_proofs(cmap, supported, scripts)
     sample = ""
     if non_latin:
         cand = sorted([x for x in supported if x[3] == non_latin and x[4]], reverse=True)
@@ -544,10 +608,132 @@ def analyze_fonts(d, font_paths):
         out.setdefault("errors", []).append(f"outline proof: {e}")
     # specimen: subset of the primary font embedded in the page
     try:
-        out["specimen"] = make_specimen(prim, cmap, fam, sample)
+        out["specimen"] = make_specimen(prim, cmap, fam, sample, out["script_proofs"])
     except Exception as e:
         out.setdefault("errors", []).append(f"specimen: {e}")
+    # the other styles, to switch the specimen and the proofs to them
+    if styles and out.get("specimen"):
+        try:
+            out["style_fonts"] = style_fonts(fonts, prim_path, out["specimen"]["text"], d)
+        except Exception as e:
+            out.setdefault("errors", []).append(f"styles: {e}")
     return out
+
+
+LATIN_COMPARE = ["Hamburgefonstiv HAMBURGEFONSTIV 0123456789",
+                 "Sphinx of black quartz, judge my vow. The quick brown fox jumps over the lazy dog."]
+
+
+def script_proofs(cmap, supported, scripts):
+    from fontTools import unicodedata as ud
+    out = []
+    lang_scripts = {x[3] for x in supported}
+    for sc, n in scripts.most_common():
+        if sc in ("Latn", "Zyyy", "Zinh", "Zzzz"):
+            continue
+        letters = [chr(c) for c in sorted(cmap) if ud.script(chr(c)) == sc and ud.category(chr(c)).startswith("L")]
+        if sc not in lang_scripts and len(letters) < 20:
+            continue
+        info = lang_info()
+        lang, text, base = None, [], ""
+        for pop, lid, lname, _, sample in sorted([x for x in supported if x[3] == sc], reverse=True):
+            li = info.get(lid, ("", "", 0, "", "", False, ""))
+            text = [t for t in dict.fromkeys((sample, li[4])) if t and all(ord(c) in cmap or c.isspace() for c in t)]
+            if len(text) == 2 and text[1].startswith(text[0].rstrip(".")):
+                text = text[1:]
+            if text:
+                lang, base = lname, li[6]
+                break
+        # the alphabet of the sample language first, then the other letters of the script in the font
+        low = [c for c in dict.fromkeys(base.replace("{", "").replace("}", "")) if c in letters]
+        core = [c for c in dict.fromkeys([u for c in low for u in c.upper() if len(c.upper()) == 1] + low) if c in letters]
+        rest = [c for c in letters if c not in core][:180]
+        lines = [{"t": LATIN_COMPARE[0], "latin": True}]
+        for chunk in ("".join(c for c in core if ud.category(c) == "Lu"), "".join(c for c in core if ud.category(c) != "Lu"),
+                      "".join(c for c in rest if ud.category(c) == "Lu"), "".join(c for c in rest if ud.category(c) != "Lu")):
+            for i in range(0, len(chunk), 60):
+                lines.append({"t": chunk[i:i + 60]})
+        if text:
+            lines.append({"t": LATIN_COMPARE[1], "latin": True})
+            lines += [{"t": t[:400]} for t in text]
+        out.append({"script": sc, "name": ud.script_name(sc).replace("_", " "), "language": lang,
+                    "letters": len(letters), "lines": lines})
+        if len(out) >= 6:
+            break
+    return out
+
+
+def _subset(font, text):
+    from fontTools import subset
+    from fontTools.ttLib import TTFont
+    buf = io.BytesIO()
+    font.save(buf)
+    f2 = TTFont(io.BytesIO(buf.getvalue()))
+    opts = subset.Options()
+    opts.layout_features = ["*"]
+    opts.name_IDs = []
+    opts.notdef_outline = True
+    opts.hinting = False
+    opts.drop_tables += ["DSIG"]
+    try:
+        import brotli  # noqa: F401
+        opts.flavor, mime = "woff2", "font/woff2"
+    except ImportError:
+        mime = "font/ttf"
+    s = subset.Subsetter(opts)
+    s.populate(text=text)
+    s.subset(f2)
+    out = io.BytesIO()
+    subset.save_font(f2, out, opts)
+    data = out.getvalue()
+    return f"data:{mime};base64," + base64.b64encode(data).decode(), len(data)
+
+
+STYLE_CACHE = None   # folder where the style subsets are kept between runs (set by generate)
+
+
+def _subset_cached(path, font, text):
+    if not STYLE_CACHE:
+        return _subset(font, text)
+    h = hashlib.sha1()
+    with open(path, "rb") as fh:
+        h.update(fh.read())
+    h.update(text.encode())
+    fp = os.path.join(STYLE_CACHE, h.hexdigest()[:20] + ".json")
+    if os.path.exists(fp):
+        os.utime(fp)
+        return tuple(json.load(open(fp)))
+    res = _subset(font, text)
+    os.makedirs(STYLE_CACHE, exist_ok=True)
+    json.dump(res, open(fp, "w"))
+    return res
+
+
+def style_fonts(fonts, prim_path, text, d="", limit=12):
+    """Every style of the family: one entry per font file (deduplicated), and the named instances of variable fonts."""
+    seen, out = set(), []
+    order = sorted(fonts, key=lambda pf: (pf[0] != prim_path, "italic" in os.path.basename(pf[0]).lower(), os.path.basename(pf[0])))
+    for path, f in order:
+        nm = f["name"]
+        fam = nm.getDebugName(16) or nm.getDebugName(1) or ""
+        sub = nm.getDebugName(17) or nm.getDebugName(2) or ""
+        key = (fam, sub, "fvar" in f)
+        if key in seen:
+            continue
+        seen.add(key)
+        italic = bool(f["OS/2"].fsSelection & 1) if "OS/2" in f else "italic" in path.lower()
+        entry = {"label": f"{fam} {sub}".strip() if "fvar" not in f else f"{fam}{' Italic' if italic else ''} (variable)",
+                 "file": os.path.basename(path), "italic": italic, "primary": path == prim_path}
+        if "fvar" in f:
+            entry["axes"] = [{"tag": a.axisTag, "min": a.minValue, "def": a.defaultValue, "max": a.maxValue} for a in f["fvar"].axes]
+            entry["instances"] = [{"name": nm.getDebugName(i.subfamilyNameID) or "", "coords": {k: round(v, 2) for k, v in i.coordinates.items()}}
+                                  for i in f["fvar"].instances][:40]
+        if path != prim_path:
+            entry["data"], entry["size"] = _subset_cached(os.path.join(d, path), f, text)
+        out.append(entry)
+        if len(out) >= limit:
+            break
+    return out if len(out) > 1 or (out and out[0].get("instances")) else []
 
 
 # ----------------------------------------------------------------- proofs shown in each card
@@ -698,9 +884,7 @@ def designer_history(rec):
     return out
 
 
-def make_specimen(font, cmap, fam, sample):
-    from fontTools import subset
-    from fontTools.ttLib import TTFont
+def make_specimen(font, cmap, fam, sample, scripts=()):
     latin = "Hamburgefonstiv 0123456789 Sphinx of black quartz, judge my vow. ÀÉÎõüçßŁ€&?!"
     lines = [fam or "Specimen"]
     if 0x61 in cmap and 0x41 in cmap:
@@ -708,29 +892,10 @@ def make_specimen(font, cmap, fam, sample):
     if sample:
         lines.append(sample)
     grid = [chr(c) for c in sorted(cmap) if c > 0x20 and not (0x300 <= c <= 0x36F)][:480]
-    text = "".join(lines) + "".join(grid) + "".join(PROOFS.values())
-    buf = io.BytesIO()
-    font.save(buf)
-    f2 = TTFont(io.BytesIO(buf.getvalue()))
-    opts = subset.Options()
-    opts.layout_features = ["*"]
-    opts.name_IDs = []
-    opts.notdef_outline = True
-    opts.hinting = False
-    opts.drop_tables += ["DSIG"]
-    try:
-        import brotli  # noqa: F401
-        opts.flavor, mime = "woff2", "font/woff2"
-    except ImportError:
-        mime = "font/ttf"
-    s = subset.Subsetter(opts)
-    s.populate(text=text)
-    s.subset(f2)
-    out = io.BytesIO()
-    subset.save_font(f2, out, opts)
-    data = out.getvalue()
-    return {"data": f"data:{mime};base64," + base64.b64encode(data).decode(), "size": len(data),
-            "lines": [l for l in lines if l], "grid": "".join(grid)}
+    text = "".join(lines) + "".join(grid) + "".join(PROOFS.values()) + "".join(LATIN_COMPARE) + \
+        "".join(l["t"] for sp in scripts for l in sp["lines"])
+    data, size = _subset(font, text)
+    return {"data": data, "size": size, "lines": [l for l in lines if l], "grid": "".join(grid), "text": text}
 
 
 # ----------------------------------------------------------------- QA
@@ -825,7 +990,7 @@ DERIV_RX = re.compile(r"\b(derivative of|based on|fork(?:ed)? (?:of|from)|remix(
 # What AI was used for, read clause by clause. "design": AI drew, generated or expanded the glyphs.
 AI_DESIGN_RX = re.compile(r"\b(glyphs?|outlines?|letterforms?|character set|characters|glyph geometry|geometry|shapes|"
                           r"forms|draw\w*|drew|construct\w*|expan(?:d|sion|ded)|character sheet|kern\w*|spacing|vectori[sz]\w*|"
-                          r"designed the (?:font|typeface|letters))\b", re.I)
+                          r"designed the (?:font|typeface|letters)|design|designs|artwork|concept art\w*|sketch\w*|lettering|illustrat\w*)\b", re.I)
 AI_TECH_RX = re.compile(r"\b(build\w*|tooling|tools? for|scripts?|scripting|qa|quality assurance|fontbakery|fontspector|"
                         r"documentation|docs|readme|repo\w*|specimen|website|site|pipeline|engineering|metadata|name table|"
                         r"stat|metrics|automation|cleanup|planning|coding|code review|conformance|compliance|packaging|ci)\b", re.I)
@@ -833,6 +998,14 @@ AI_IMAGE_RX = re.compile(r"\b(midjourney|dall[ -]?e|stable diffusion|gpt[- ]imag
                          r"text[- ]to[- ]image)\b", re.I)
 AI_NEG_RX = re.compile(r"\b(not|no|never|none|without)\b", re.I)
 TEMPLATE_AI_RX = re.compile(r"commit to clearly disclosing if AI tools were used", re.I)
+# AI wrote code…
+AI_CODE_RX = re.compile(r"\b(scripts?|scripting|code|coding|python|generator|tooling|tools?|program\w*|automation|pipeline|build\w*)\b", re.I)
+# …and the outlines come out of code, or the project transforms another font
+OUTLINES_FROM_CODE_RX = re.compile(
+    r"(generated (?:by|from|with) (?:code|scripts?|python)|generated programmatically|programmatic\w*|parametric\w*|procedural\w*|"
+    r"converted (?:in)?to python|python code (?:to|that) (?:generate|construct|draw)|generator that (?:draws|builds|makes)|"
+    r"transformed by script|by script|scripted (?:transform|outline)\w*|built from (?:code|python)|code rather than drawn|"
+    r"(?:based on|derived? from|derives from|fork(?:ed)? (?:of|from)|modified version of|derivative of)\s+(?:the\s+)?[A-Z][\w-]+)")
 
 
 def ai_use(text):
@@ -857,10 +1030,20 @@ def ai_use(text):
         elif AI_TECH_RX.search(c):
             tech.append(c)
     image = any(AI_IMAGE_RX.search(c) for c in design)
+    # code that can touch the outlines: not just a specimen site or the documentation
+    code = [c for c in tech if AI_CODE_RX.search(c) and not (
+        re.search(r"\b(specimen|site|website|documentation|docs|readme)\b", c, re.I)
+        and not re.search(r"\b(scripts?|scripting|python|generator|pipeline|tooling|automation|engineering)\b", c, re.I))]
+    source = OUTLINES_FROM_CODE_RX.search(re.sub(r"\s+", " ", text or ""))
     if design and (image or not denied):
         kind = "design"
-    elif tech or denied:
+    elif code and source:
+        kind = "pipeline"         # AI-written code produces or transforms the outlines (generators, scripted derivatives)
+        tech = [source.group(0)] + tech
+    elif tech:
         kind = "technical"
+    elif denied:
+        kind = "none"             # only says AI was not used for the glyphs
     elif clauses:
         kind = "unclear"
     else:
@@ -868,8 +1051,8 @@ def ai_use(text):
     return {"kind": kind, "design": design[:3], "technical": tech[:3], "denied": denied[:2]}
 
 
-AI_KINDS = {"design": "AI used to design the glyphs", "suspected": "AI design suspected",
-            "technical": "AI for technical work only", "unclear": "AI mentioned, use unclear", "none": "No AI mentioned"}
+AI_KINDS = {"design": "AI-made glyphs", "pipeline": "AI in the outline pipeline", "suspected": "AI design suspected",
+            "technical": "AI around the font only", "unclear": "AI mentioned, use unclear", "none": "No AI mentioned"}
 
 
 def snippets(rx, text, n=2, width=110):
@@ -945,7 +1128,7 @@ def analyse(issue, args, cache, offline):
             rec["repo_info"] = {k: v for k, v in info.items() if k != "texts"}
             text_for_signals += "\n" + info["texts"]
             if info["fonts"]:
-                rec["fonts"] = analyze_fonts(d, info["fonts"])
+                rec["fonts"] = analyze_fonts(d, info["fonts"], styles=getattr(args, "style_fonts", False))
                 text_for_signals += "\n" + rec["fonts"].pop("name_text", "")
                 rec["qa"] = run_qa(d, info["fonts"], args.checker, cache, head.get("sha", ""))
     # signals
@@ -1184,11 +1367,13 @@ def proposal(rec):
     look = []
     if ai.get("kind") == "design":
         look.append("AI used to design the glyphs" + (" (image generator)" if any(AI_IMAGE_RX.search(c) for c in ai.get("design", [])) else ""))
+    elif ai.get("kind") == "pipeline":
+        look.append("AI in the outline pipeline: the outlines are produced or transformed by AI-written code")
     elif ai.get("kind") == "suspected":
         look.append("AI design suspected (no clear statement)")
     ai_note = "AI mentioned: check how it was used" if ai.get("kind") == "unclear" else None
     if ai.get("kind") == "technical":
-        good.append("AI used for technical work only")
+        good.append("AI used around the font only (build, QA, docs)")
     if (ol.get("autotrace") or 0) >= 2:
         look.append("outlines look auto-traced")
     if rec.get("same_repo"):
@@ -1250,6 +1435,8 @@ def draft_comment(rec):
     ai = rec.get("ai") or {}
     if ai.get("kind") in ("suspected", "unclear"):
         items.append("Could you tell us whether AI tools were used to create this project, and how?")
+    elif ai.get("kind") == "pipeline":
+        items.append("Which parts of the final outlines were produced or transformed by code written with AI tools?")
     if not items:
         return ""
     return (f"Hi @{rec['author']}, thanks for submitting {rec['family_guess']}! Before we can review it, "
@@ -1262,6 +1449,21 @@ def build_report(recs, meta, out_path):
     tpl_path = TEMPLATE or next((p for p in (os.path.join(here, "report_template.html"),
                                              os.path.join(here, "submissions_template.html")) if os.path.exists(p)))
     tpl = open(tpl_path, encoding="utf-8").read()
+    fdir_name = os.path.splitext(os.path.basename(out_path))[0] + "-fonts"
+    fdir = os.path.join(os.path.dirname(os.path.abspath(out_path)), fdir_name)
+    shutil.rmtree(fdir, ignore_errors=True)
+    for r in recs:
+        f = r.get("fonts") or {}
+        (f.get("specimen") or {}).pop("text", None)
+        for k, sf in enumerate(f.get("style_fonts") or []):
+            dat = sf.get("data") or ""
+            if dat.startswith("data:"):
+                os.makedirs(fdir, exist_ok=True)
+                ext = "woff2" if "woff2" in dat[:30] else "ttf"
+                name = f"{r['number']}-{k}.{ext}"
+                with open(os.path.join(fdir, name), "wb") as fh:
+                    fh.write(base64.b64decode(dat.split(",", 1)[1]))
+                sf["data"] = f"{fdir_name}/{name}"
     data = json.dumps({"meta": meta, "items": recs}, ensure_ascii=False).replace("</", "<\\/")
     with open(out_path, "w", encoding="utf-8") as fh:
         fh.write(tpl.replace("/*__DATA__*/null", data))
@@ -1272,6 +1474,12 @@ def generate(args):
     LOG.clear()
     os.makedirs(args.cache, exist_ok=True)
     cache = Cache(args.cache)
+    global STYLE_CACHE
+    STYLE_CACHE = os.path.join(args.cache, "style_fonts")
+    if os.path.isdir(STYLE_CACHE):   # forget subsets unused for 30 days
+        for x in os.listdir(STYLE_CACHE):
+            if time.time() - os.path.getmtime(os.path.join(STYLE_CACHE, x)) > 30 * 86400:
+                os.remove(os.path.join(STYLE_CACHE, x))
     offline = bool(args.issues_json)
     if offline:
         issues, ms = load_offline(args.issues_json), None
@@ -1393,6 +1601,12 @@ def serve(args, port):
                                            "has_report": os.path.exists(args.out)}), "application/json")
             elif path == "/report" and os.path.exists(args.out):
                 self.send(200, open(args.out, "rb").read())
+            elif path.startswith("/" + os.path.splitext(os.path.basename(args.out))[0] + "-fonts/"):
+                fp = os.path.join(os.path.dirname(os.path.abspath(args.out)), *[x for x in path.split("/")[1:3] if x not in ("", "..")])
+                if os.path.isfile(fp):
+                    self.send(200, open(fp, "rb").read(), "font/woff2" if fp.endswith("woff2") else "font/ttf")
+                else:
+                    self.send(404, "not found", "text/plain")
             else:
                 self.send(404, "not found", "text/plain")
 
@@ -1426,6 +1640,7 @@ def main():
     ap.add_argument("--template", help="report template path")
     ap.add_argument("--gf", help="a local google/fonts clone, to find designers who already have families on Google Fonts")
     args = ap.parse_args()
+    args.style_fonts = True
     if args.gf:
         load_designer_index(args.gf)
     args.out = args.out or os.path.join(args.cache, "submissions_report.html")

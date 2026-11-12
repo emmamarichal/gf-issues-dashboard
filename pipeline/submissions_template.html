@@ -48,7 +48,14 @@ h1{font-size:26px;font-weight:600;margin:0 0 4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{font-size:12px;background:var(--chip);border-radius:999px;padding:2px 9px;white-space:nowrap}
 .chip.good{color:var(--good)}.chip.warn{color:var(--warn)}.chip.bad{color:var(--bad)}
-.spec{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:hidden;background:var(--bg)}
+.spec{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:hidden;background:#fff;color:#000}
+.spec,.proofs details{--ink:#000;--muted:#5f5e5a;--line:#dedcd5;--soft:#f2f2f2;--panel:#fff;--bg:#fff}
+.uf{font-family:var(--sf),var(--font);font-variation-settings:var(--fvs,normal)}
+.spec select{font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#000;max-width:260px}
+.sp .row{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:baseline;padding:2px 0}
+.sp .row.latin{margin-top:8px}
+.sp .lab{font:11px var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sp .txt{line-height:1.45;overflow-wrap:anywhere}
 .spec .l0{font-size:44px;line-height:1.15}
 .spec .l1{font-size:26px;line-height:1.25;word-break:break-all}
 .spec .l2{font-size:18px;line-height:1.4}
@@ -101,7 +108,7 @@ button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:
 .counts button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
 .counts button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);font-weight:600}
 .proofs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.proofs details{margin:0;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--bg)}
+.proofs details{margin:0;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:#fff;color:#000}
 .proofs details[open]{flex-basis:100%}
 .proofs .pt{line-height:1.45;overflow-wrap:anywhere;padding:6px 0}
 .proofs .tools{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:4px}
@@ -139,8 +146,8 @@ button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:
     </select></label>
     <label>AI <select id="aiFilter">
       <option value="">All</option>
-      <option value="design">AI used to design the glyphs, or suspected</option>
-      <option value="technical">AI for technical work only</option>
+      <option value="design">Made with AI (AI-made glyphs, AI in the outline pipeline, or suspected)</option>
+      <option value="technical">AI around the font only</option>
       <option value="none">No AI mentioned</option>
     </select></label>
     <label><input type="checkbox" id="hideDone"> Hide treated</label>
@@ -200,21 +207,24 @@ function specimen(it) {
     st.textContent = `@font-face{font-family:"${fam}";src:url(${f.specimen.data});font-display:block}`;
     document.head.append(st);
     const lines = f.specimen.lines;
-    const wrap = el('div', {style: `font-family:"${fam}",var(--font)`});
+    const wrap = el('div', {class: 'uf'});
     lines.forEach((t, i) => wrap.append(el('div', {class: i === 0 ? 'l0' : (i < 3 ? 'l1' : 'l2'), text: t})));
-    const grid = el('div', {class: 'gridchars', hidden: true, style: `font-family:"${fam}",var(--font)`, text: f.specimen.grid});
+    const grid = el('div', {class: 'gridchars uf', hidden: true, text: f.specimen.grid});
     wrap.append(grid);
     box.append(wrap);
     const note = el('div', {class: 'note'});
     note.append(el('span', {text: `${f.primary} · ${f.glyph_count} glyphs · ${f.codepoints} characters`}));
     if (f.sample_language) note.append(el('span', {text: 'Sample: ' + f.sample_language}));
+    const styleSel = styleMenu(it, box);
+    if (styleSel) note.append(el('label', {}, 'Style ', styleSel));
     (f.axes || []).slice(0, 3).forEach((a) => {
       const r = el('input', {type: 'range', min: a.min, max: a.max, step: 'any', value: a.def, 'aria-label': a.tag});
       const v = el('span', {text: `${a.tag} ${Math.round(a.def)}`});
       r.addEventListener('input', () => {
         v.textContent = `${a.tag} ${Math.round(r.value)}`;
         const settings = [...note.querySelectorAll('input[type=range]')].map((x) => `"${x.getAttribute('aria-label')}" ${x.value}`).join(',');
-        wrap.style.fontVariationSettings = settings; grid.style.fontVariationSettings = settings;
+        const cardEl = box.closest('.card');
+        if (cardEl) cardEl.style.setProperty('--fvs', settings);
       });
       note.append(el('label', {}, v, r));
     });
@@ -229,6 +239,53 @@ function specimen(it) {
   return box;
 }
 
+// the other styles of the family: switch the specimen and every text proof of the card to them
+const LOADED_STYLES = {};
+function styleMenu(it, box) {
+  const f = it.fonts || {};
+  const sf = f.style_fonts || [];
+  if (!sf.length) return null;
+  const sel = el('select', {'aria-label': 'Style'});
+  sf.forEach((s, k) => {
+    if (s.instances && s.instances.length) {
+      const g = el('optgroup', {label: s.label + (s.primary ? '' : '')});
+      s.instances.forEach((ins, j) => g.append(el('option', {value: `${k}:${j}`, text: ins.name || JSON.stringify(ins.coords)})));
+      g.append(el('option', {value: `${k}:`, text: `${s.label}, default`}));
+      sel.append(g);
+    } else sel.append(el('option', {value: `${k}:`, text: s.label}));
+  });
+  const primary = sf.findIndex((s) => s.primary);
+  const defIns = primary >= 0 && sf[primary].instances ? sf[primary].instances.findIndex((ins) => (f.axes || []).every((a) => ins.coords[a.tag] === Math.round(a.def * 100) / 100)) : -1;
+  sel.value = primary >= 0 ? `${primary}:${defIns >= 0 ? defIns : ''}` : `0:`;
+  sel.addEventListener('change', async () => {
+    const [k, j] = sel.value.split(':');
+    const s = sf[+k];
+    const cardEl = box.closest('.card');
+    let fam = 'gfs-' + it.number;
+    if (!s.primary && s.data) {
+      fam = `gfs-${it.number}-${k}`;
+      if (!LOADED_STYLES[fam]) {
+        sel.disabled = true;
+        try {
+          const ff = new FontFace(fam, `url(${s.data})`);
+          document.fonts.add(await ff.load());
+          LOADED_STYLES[fam] = true;
+        } catch (e) { alert('Could not load ' + s.file); sel.disabled = false; return; }
+        sel.disabled = false;
+      }
+    }
+    cardEl.style.setProperty('--sf', `"${fam}"`);
+    const ins = j !== '' && s.instances ? s.instances[+j] : null;
+    const coords = ins ? ins.coords : Object.fromEntries((s.axes || []).map((a) => [a.tag, a.def]));
+    cardEl.style.setProperty('--fvs', Object.keys(coords).length ? Object.entries(coords).map(([t, v]) => `"${t}" ${v}`).join(',') : 'normal');
+    box.querySelectorAll('.note input[type=range]').forEach((r) => {
+      const t = r.getAttribute('aria-label');
+      if (coords[t] != null) { r.value = coords[t]; r.previousSibling.textContent = `${t} ${Math.round(coords[t])}`; }
+    });
+  });
+  return sel;
+}
+
 function charsetBox(it) {
   const f = it.fonts || {};
   const b = el('div', {class: 'box'}, el('h3', {text: 'Character set'}));
@@ -238,7 +295,11 @@ function charsetBox(it) {
   if (part.length) b.append(el('p', {class: 'small'}, 'Nearly complete: ' + part.map((g) => `${g[0].replace('GF_', '').replace(/_/g, ' ')} (${g[1]}%, ${g[2]} missing)`).join(', ')));
   if (f.latin_core_missing && f.latin_core_missing.length) b.append(el('p', {}, el('span', {class: 'no', text: 'Latin Core missing: '}), el('code', {text: f.latin_core_missing.join(' ')})));
   b.append(kv([
-    ['Languages', `${f.languages} supported (base exemplars)`],
+    ['Languages', f.languages_method === 'shaperglot'
+      ? `${f.languages} supported (shaperglot, the language checker Google Fonts uses)` +
+        (f.languages_chars > f.languages ? ` · ${f.languages_chars} counting the letters only (the others miss a combining mark or its attachment)` : '')
+      : `${f.languages} supported (letters of each language, shaperglot not installed)`],
+    f.languages_partial ? ['Nearly', `${f.languages_partial} more languages at 80% or more: ${(f.languages_partial_top || []).join(', ')}${f.languages_partial > 8 ? '…' : ''}`] : null,
     ['By script', (f.languages_by_script || []).map(([s, n]) => `${s} ${n}`).join(' · ') || '—'],
     ['Scripts in cmap', (f.scripts || []).join(', ') || '—'],
     ['Styles', (f.styles || []).join(', ')],
@@ -306,7 +367,7 @@ function outlineBox(it) {
 function aiBox(it) {
   const a = it.ai || {};
   const b = el('div', {class: 'box'}, el('h3', {text: 'AI'}));
-  const cls = {design: 'bad', suspected: 'bad', unclear: 'warn', technical: 'good', none: 'good'}[a.kind];
+  const cls = {design: 'bad', pipeline: 'bad', suspected: 'bad', unclear: 'warn', technical: 'good', none: 'good'}[a.kind];
   b.append(el('p', {}, chip(a.kind_label || a.verdict || '—', cls)));
   const quotes = [...(a.design || []), ...(a.denied || []), ...(a.technical || [])].slice(0, 4);
   quotes.forEach((m) => b.append(el('blockquote', {text: m})));
@@ -314,7 +375,7 @@ function aiBox(it) {
   if (a.reasons && a.reasons.length) b.append(el('ul', {class: 'tight small'}, a.reasons.map((r) => el('li', {text: r}))));
   const tools = (it.fonts || {}).tools || [];
   if (tools.length) b.append(el('p', {class: 'small', text: 'Tools in font names/tables: ' + tools.join(', ')}));
-  b.append(el('p', {class: 'small', text: 'Read sentence by sentence: AI that drew, generated or expanded glyphs (or an image generator) counts as design; build, QA, docs or site work as technical. Suspected: no clear statement, but auto-traced-looking outlines or several account signals. Heuristic only: check the specimen yourself.'}));
+  b.append(el('p', {class: 'small', text: 'Read sentence by sentence. AI-made glyphs: AI drew, generated or expanded glyphs, or made the starting artwork. AI in the outline pipeline: the outlines are produced or transformed by code written with AI (generators, Python-built fonts, scripted changes to a font the project is based on). Around the font only: build, QA, docs or site. Suspected: no clear statement, but auto-traced-looking outlines or several account signals. Heuristic only: check the specimen yourself.'}));
   return b;
 }
 
@@ -373,8 +434,8 @@ function scoreBox(it, rerender) {
 }
 
 const LEVELS = {soon: 'Publish soon', later: 'Publish, schedule for later', changes: 'Ask the designer for changes', look: 'Look closer before deciding', info: 'Missing information'};
-const AI_FILTER = {design: ['design', 'suspected'], technical: ['technical'], none: ['none']};
-const AI_RISK = {none: 0, technical: 1, unclear: 2, suspected: 3, design: 4};
+const AI_FILTER = {design: ['design', 'pipeline', 'suspected'], technical: ['technical'], none: ['none']};
+const AI_RISK = {none: 0, technical: 1, unclear: 2, suspected: 3, pipeline: 3, design: 4};
 let levelFilter = '';
 
 function proposalBox(it) {
@@ -390,7 +451,7 @@ function proofText(it, key, size, extra) {
   const f = it.fonts || {};
   const fam = 'gfs-' + it.number;
   const wrap = el('div');
-  const text = el('div', {class: 'pt', style: `font-family:"${fam}",var(--font);font-size:${size}px`});
+  const text = el('div', {class: 'pt uf', style: `font-size:${size}px`});
   DATA.meta.proofs[key].split('\n').forEach((line) => text.append(el('div', {text: line})));
   const tools = el('div', {class: 'tools'});
   const r = el('input', {type: 'range', min: 12, max: 72, value: size, 'aria-label': 'Size'});
@@ -437,6 +498,20 @@ function outlineView(it) {
   return wrap;
 }
 
+function scriptProof(sp, size) {
+  const wrap = el('div');
+  const text = el('div', {class: 'sp', style: `font-size:${size}px`});
+  sp.lines.forEach((l) => text.append(el('div', {class: 'row' + (l.latin ? ' latin' : '')},
+    el('span', {class: 'lab', text: l.latin ? 'Latin' : sp.name}), el('span', {class: 'txt uf', text: l.t}))));
+  const tools = el('div', {class: 'tools'});
+  const r = el('input', {type: 'range', min: 12, max: 72, value: size, 'aria-label': 'Size'});
+  const v = el('span', {text: size + ' px'});
+  r.addEventListener('input', () => { text.style.fontSize = r.value + 'px'; v.textContent = r.value + ' px'; });
+  tools.append(el('label', {}, v, r), el('span', {text: `${sp.letters} ${sp.name} letters` + (sp.language ? ` · text: ${sp.language}` : ' · no sample text fully covered by the font')}));
+  wrap.append(text, tools);
+  return wrap;
+}
+
 function proofs(it) {
   const f = it.fonts || {};
   if (!f.specimen) return null;
@@ -454,12 +529,14 @@ function proofs(it) {
   }));
   add('Outlines', () => outlineView(it));
   add('Accents', () => proofText(it, 'accents', 24));
+  (f.script_proofs || []).forEach((sp) => add(sp.name, () => scriptProof(sp, 28)));
   add('Symbols', () => proofText(it, 'symbols', 24));
   return row;
 }
 
 function card(it) {
   const c = el('article', {class: 'card', id: 'issue-' + it.number});
+  c.style.setProperty('--sf', `"gfs-${it.number}"`);
   const render = () => {
     const sc = c.querySelector('.score b');
     if (sc) sc.textContent = Math.round(totalScore(it));
