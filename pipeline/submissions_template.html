@@ -30,8 +30,8 @@ h1{font-size:26px;font-weight:600;margin:0 0 4px}
 .banner b{font-weight:600}
 .left{margin:6px 0 0;padding-left:18px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 18px;transition:opacity .25s}
-.card.done{opacity:.42}
-.card.done:hover{opacity:.8}
+.card.done{opacity:.62}
+.card.done:hover,.card.done:focus-within{opacity:1}
 .head{display:flex;gap:16px;align-items:flex-start}
 .score{flex:0 0 auto;width:74px;height:74px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:var(--soft);border:1px solid var(--line)}
@@ -81,9 +81,45 @@ blockquote{margin:6px 0;padding:4px 10px;border-left:3px solid var(--line);color
 table.breakdown{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 table.breakdown td{padding:3px 0;border-bottom:1px solid var(--line);vertical-align:top}
 table.breakdown td.n{text-align:right;white-space:nowrap;padding-left:8px}
-.todo{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.todo label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
-.todo .rule{flex-basis:100%;font-size:12px;color:var(--muted)}
+.decide{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.decide .lbl{font-size:13px;font-weight:600;margin-right:4px}
+.decide .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.decide .seg button{font:inherit;font-size:13px;border:0;border-left:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 14px;cursor:pointer}
+.decide .seg button:first-child{border-left:0}
+.decide .seg button[aria-pressed=true].accept{background:#1e7b45;color:#fff}
+.decide .seg button[aria-pressed=true].review{background:#b26b00;color:#fff}
+.decide .seg button[aria-pressed=true].close{background:#b3261e;color:#fff}
+.decide textarea{flex-basis:100%;font:inherit;font-size:13px;min-height:54px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
+.decide .rule{flex-basis:100%;font-size:12px;color:var(--muted)}
+.card.dec-accept{border-left:4px solid #1e7b45}.card.dec-review{border-left:4px solid #b26b00}.card.dec-close{border-left:4px solid #b3261e}
+.pdfbar{margin:24px 0 8px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.pdfbar p{margin:0;flex:1 1 320px;font-size:14px}
+.pdfbar button,.bar #pdfTop{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:7px 16px;cursor:pointer}
+.bar #pdfTop{font-size:13px;padding:4px 12px}
+#pdf{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body.printing{background:#fff!important;color:#000}
+  body.printing .wrap{display:none!important}
+  body.printing #pdf{display:block;font-family:var(--font);color:#000;--ink:#000;--muted:#555;--line:#ccc}
+}
+#pdf h1{font-size:22px;margin:0 0 2px}
+#pdf .pdate{color:var(--muted);font-size:12px;margin:0 0 14px}
+#pdf .psum{font-size:13px;margin:0 0 18px}
+#pdf h2{font-size:16px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid #000;break-after:avoid}
+#pdf h2 small{font-weight:400;color:var(--muted)}
+#pdf .pcards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#pdf .pcard{border:1px solid var(--line);border-radius:8px;padding:8px 10px;break-inside:avoid}
+#pdf .pcard .pt{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+#pdf .pcard .pt b{font-size:14px}
+#pdf .pcard .pt a{color:var(--muted);text-decoration:none;font-size:11px;white-space:nowrap}
+#pdf .pcard .ps{font-size:40px;line-height:1.15;margin:4px 0 2px;overflow:hidden;white-space:nowrap;text-overflow:clip}
+#pdf .pcard .ps span{margin-right:.35em}
+#pdf .pcard .pm{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
+#pdf .pcard .ptag{font-size:10.5px;line-height:1.3;color:#444;background:#ececec;border-radius:999px;padding:2px 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#pdf .pcard .pn{font-size:12px;margin:6px 0 0;padding:5px 8px;border-left:3px solid #999;white-space:pre-wrap}
+#pdf .pcard .pn.auto{border-left:0;padding:0;color:var(--muted)}
+#pdf .pempty{font-size:12px;color:var(--muted)}
 details{margin-top:10px}
 summary{cursor:pointer;color:var(--accent);font-size:13px}
 pre.draft{white-space:pre-wrap;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.45 var(--font);margin:8px 0}
@@ -150,23 +186,39 @@ button.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:
       <option value="technical">AI around the font only</option>
       <option value="none">No AI mentioned</option>
     </select></label>
-    <label><input type="checkbox" id="hideDone"> Hide treated</label>
-    <button type="button" id="resetTicks" hidden>Reset ticks</button>
+    <label><input type="checkbox" id="hideDone"> Hide decided</label>
+    <button type="button" id="resetTicks" hidden>Reset decisions</button>
+    <button type="button" id="pdfTop" title="A PDF for the manager: accepted, closed, to double-check">Generate PDF</button>
   </div>
   <div class="counts" id="counts"></div>
   <div id="cards"></div>
+  <div class="pdfbar" id="pdfbar"><p id="pdfInfo"></p><button type="button" id="pdfBottom">Generate PDF</button></div>
   <div class="footer" id="footer"></div>
 </div>
+<div id="pdf" aria-hidden="true"></div>
 <script id="data" type="application/json">/*__DATA__*/null</script>
 <script>
 const DATA = JSON.parse(document.getElementById('data').textContent);
-const state = {};             // per-issue: {todo:[bool x5], originality:null|0..5}
-const STORE = 'gf-submissions-v1';
-function loadStore() { if (!DATA.meta.hosted) return {}; try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { return {}; } }
+const state = {};             // per-issue: {decision: null|'accept'|'review'|'close', note: '', originality: null|0..5}
+const STORE = 'gf-submissions-v2';
+const OLD_STORE = 'gf-submissions-v1';  // ticks of the earlier to-do list: only the originality ratings are kept
+function loadStore() {
+  if (!DATA.meta.hosted) return {};
+  try {
+    const cur = localStorage.getItem(STORE);
+    if (cur) return JSON.parse(cur);
+    const old = JSON.parse(localStorage.getItem(OLD_STORE) || '{}');
+    return Object.fromEntries(Object.entries(old).map(([n, v]) => [n, {originality: (v || {}).originality ?? null}]));
+  } catch (e) { return {}; }
+}
 function saveStore() { if (!DATA.meta.hosted) return; try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage unavailable */ } }
 const LIVE = {};              // issue number -> reason it left the queue since the build
-const TODO = ['Decision taken (Accepted label added, or closing comment)', 'Comment posted (information missing)',
-              'Assigned', 'Milestone set', 'Priority set'];
+const DECISIONS = [
+  {id: 'accept', label: 'Accepted', pdf: 'Accepted', hint: 'who takes it, priority, milestone…'},
+  {id: 'review', label: 'To review', pdf: 'To double-check, or to decide with Dave', hint: 'what to check, the question for Dave…'},
+  {id: 'close', label: 'Closed', pdf: 'Closed', hint: 'why it is closed…'}
+];
+const blankState = (originality) => ({decision: null, note: '', originality: originality ?? null});
 
 function el(tag, attrs, ...kids) {
   const e = document.createElement(tag);
@@ -191,9 +243,32 @@ function totalScore(it) {
   return it.score.auto + (s.originality == null ? 0 : s.originality * 2);
 }
 function isDone(it) {
-  if (LIVE[it.number]) return true;
-  const t = state[it.number].todo;
-  return (t[0] || t[1]) && t[2] && t[3] && t[4];
+  return !!(LIVE[it.number] || state[it.number].decision);
+}
+
+// Accepted / To review / Closed, and a comment: what goes into the PDF for the manager.
+function decisionBox(it, render) {
+  const st = state[it.number];
+  const box = el('div', {class: 'decide'}, el('span', {class: 'lbl', text: 'Decision'}));
+  const seg = el('div', {class: 'seg', role: 'group', 'aria-label': 'Decision'});
+  const note = el('textarea', {'aria-label': 'Comment on the decision'});
+  const setHint = () => { const d = DECISIONS.find((x) => x.id === st.decision); note.placeholder = 'Comment (' + (d ? d.hint : 'who takes it, why it is closed, what to check…') + ')'; };
+  DECISIONS.forEach((d) => {
+    const b = el('button', {type: 'button', class: d.id, 'aria-pressed': String(st.decision === d.id), text: d.label});
+    b.addEventListener('click', () => {
+      st.decision = st.decision === d.id ? null : d.id;   // a second click clears it
+      seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x.classList.contains(st.decision))));
+      setHint(); saveStore(); render(); applyFilters(); updatePdfBar();
+    });
+    seg.append(b);
+  });
+  note.value = st.note || '';
+  note.addEventListener('input', () => { st.note = note.value; saveStore(); });
+  setHint();
+  box.append(seg, note, el('span', {class: 'rule', text: DATA.meta.hosted
+    ? 'Decisions and comments are kept in this browser only, and go into the PDF at the end of the page. Click a decision again to clear it.'
+    : 'Decisions and comments are not saved: they reset when the report is regenerated. They go into the PDF at the end of the page.'}));
+  return box;
 }
 
 function specimen(it) {
@@ -541,6 +616,7 @@ function card(it) {
     const sc = c.querySelector('.score b');
     if (sc) sc.textContent = Math.round(totalScore(it));
     c.classList.toggle('done', isDone(it));
+    DECISIONS.forEach((d) => c.classList.toggle('dec-' + d.id, state[it.number].decision === d.id));
     updateProgress();
   };
   const days = daysSince(it.created);
@@ -581,17 +657,7 @@ function card(it) {
     }}, 'Copy');
     c.append(el('details', {}, el('summary', {text: 'Draft comment for missing information'}), pre, btn));
   }
-  const todo = el('div', {class: 'todo'});
-  TODO.forEach((label, i) => {
-    const cb = el('input', {type: 'checkbox'});
-    cb.checked = state[it.number].todo[i];
-    cb.addEventListener('change', () => { state[it.number].todo[i] = cb.checked; saveStore(); render(); applyFilters(); });
-    todo.append(el('label', {}, cb, label));
-  });
-  todo.append(el('span', {class: 'rule', text: DATA.meta.hosted
-    ? 'The card fades once a decision or a comment is ticked, plus assigned, milestone and priority. Ticks are kept in this browser only.'
-    : 'The card fades once a decision or a comment is ticked, plus assigned, milestone and priority. Ticks are not saved: they reset when the report is regenerated.'}));
-  c.append(todo);
+  c.append(decisionBox(it, render));
   c._render = render;
   return c;
 }
@@ -637,11 +703,93 @@ async function liveCheck(m) {
   applyFilters();
 }
 
+/* ---- The PDF for the manager: the decided fonts, by decision, as small cards ---- */
+const SCRIPT_NAME = {Latn: 'Latin', Cyrl: 'Cyrillic', Grek: 'Greek', Arab: 'Arabic', Hebr: 'Hebrew', Deva: 'Devanagari', Beng: 'Bengali',
+  Thai: 'Thai', Khmr: 'Khmer', Hani: 'CJK', Hira: 'Japanese', Kana: 'Japanese', Hang: 'Korean', Armn: 'Armenian', Geor: 'Georgian', Ethi: 'Ethiopic'};
+
+// A word in each other script: from the tester's sample text, else the start of its alphabet.
+function scriptWord(sp) {
+  const own = sp.lines.filter((l) => !l.latin);
+  const text = own.length > 2 ? own[own.length - 1].t : '';
+  const words = text.split(/\s+/).map((w) => w.replace(/[\p{P}\p{S}\d]/gu, '')).filter((w) => [...w].length >= 4 && [...w].length <= 12);
+  if (words.length) return words[0];
+  return own.length ? [...own[0].t].slice(0, 6).join('') : '';
+}
+
+function pdfFacts(it) {
+  const f = it.fonts || {};
+  const designer = f.designer || ((it.designer || {}).names || []).join(', ') || it.author || '';
+  const langs = f.languages ? `${f.languages} languages` + ((f.languages_by_script || []).length > 1
+    ? ' (' + f.languages_by_script.map(([sc, n]) => `${SCRIPT_NAME[sc] || sc} ${n}`).join(', ') + ')' : '') : '';
+  const axes = (f.axes || []).length ? 'Variable: ' + f.axes.map((a) => `${a.tag} ${Math.round(a.min)}–${Math.round(a.max)}`).join(', ') : 'Static';
+  const styles = (f.styles || []).length ? `${f.styles.length} style${f.styles.length === 1 ? '' : 's'}` : '';
+  return [designer ? 'by ' + designer : '', langs, axes, styles].filter(Boolean);
+}
+
+function pdfCard(it, why) {
+  const f = it.fonts || {};
+  const st = state[it.number];
+  const card = el('div', {class: 'pcard'});
+  card.append(el('div', {class: 'pt'}, el('b', {text: f.family_name || it.title}), el('a', {href: safeUrl(it.url), text: `#${it.number}`})));
+  if (f.specimen) {
+    const ps = el('div', {class: 'ps', style: `font-family:"gfs-${it.number}",var(--font)`});
+    if ((f.scripts || []).includes('Latn') || !(f.script_proofs || []).length) ps.append(el('span', {text: 'Handgloves'}));
+    (f.script_proofs || []).forEach((sp) => { const w = scriptWord(sp); if (w) ps.append(el('span', {text: w, title: sp.name})); });
+    card.append(ps);
+  }
+  card.append(el('div', {class: 'pm'}, pdfFacts(it).map((t) => el('span', {class: 'ptag', text: t}))));
+  const note = (st.note || '').trim();
+  if (note) card.append(el('p', {class: 'pn', text: note}));
+  else if (why) card.append(el('p', {class: 'pn auto', text: why}));
+  return card;
+}
+
+function decided(id) {
+  return DATA.items.filter((it) => state[it.number].decision === id)
+    .sort((a, b) => (a.fonts && a.fonts.family_name || a.title).localeCompare(b.fonts && b.fonts.family_name || b.title));
+}
+
+function updatePdfBar() {
+  const n = DECISIONS.map((d) => decided(d.id).length);
+  document.getElementById('pdfInfo').textContent = n.some(Boolean)
+    ? `PDF for the manager: ${n[0]} accepted, ${n[2]} closed, ${n[1]} to double-check or decide with Dave — each with your comment.`
+    : 'Choose Accepted, To review or Closed on the cards: the PDF lists them by decision, with your comments.';
+}
+
+async function generatePdf() {
+  const pdf = document.getElementById('pdf');
+  pdf.replaceChildren();
+  const today = new Date().toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'});
+  const counts = DECISIONS.map((d) => decided(d.id).length);
+  pdf.append(el('h1', {text: 'Google Fonts submissions — triage'}), el('p', {class: 'pdate', text: today + ' · from the submissions report'}),
+    el('p', {class: 'psum', text: `${counts[0]} accepted · ${counts[2]} closed · ${counts[1]} to double-check or decide with Dave · ${DATA.items.length - counts.reduce((a, b) => a + b, 0)} not decided yet`}));
+  const order = ['accept', 'close', 'review'];
+  order.forEach((id, i) => {
+    const d = DECISIONS.find((x) => x.id === id);
+    const list = decided(id);
+    pdf.append(el('h2', {}, `${i + 1}. ${d.pdf} `, el('small', {text: `(${list.length})`})));
+    if (!list.length) { pdf.append(el('p', {class: 'pempty', text: 'None.'})); return; }
+    // a closed font without a comment keeps the report's own reasons
+    pdf.append(el('div', {class: 'pcards'}, list.map((it) => pdfCard(it, id === 'close' && it.proposal
+      ? 'From the report: ' + ((it.proposal.bad || []).join(', ') || it.proposal.label) : ''))));
+  });
+  // the fonts must be loaded before printing, or the cards fall back to the default font
+  const fams = order.flatMap(decided).map((it) => `gfs-${it.number}`);
+  await Promise.all(fams.map((f) => document.fonts.load(`40px "${f}"`).catch(() => null)));
+  document.body.classList.add('printing');
+  const old = document.title;
+  document.title = 'GF submissions triage ' + new Date().toISOString().slice(0, 10);
+  setTimeout(() => { window.print(); }, 50);
+  const done = () => { document.body.classList.remove('printing'); document.title = old; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+}
+
 const cardsEl = document.getElementById('cards');
 const nodes = new Map();
 function updateProgress() {
   const n = DATA.items.filter(isDone).length;
-  document.getElementById('progress').textContent = `Treated ${n} / ${DATA.items.length}`;
+  const by = (id) => DATA.items.filter((it) => state[it.number].decision === id).length;
+  document.getElementById('progress').textContent = `Decided ${n} / ${DATA.items.length} (${by('accept')} accepted, ${by('review')} to review, ${by('close')} closed)`;
 }
 function applyFilters() {
   const q = document.getElementById('q').value.trim().toLowerCase();
@@ -698,8 +846,8 @@ function sortCards() {
   const saved = loadStore();
   DATA.items.forEach((it) => {
     const s = saved[it.number];
-    state[it.number] = s && Array.isArray(s.todo) && s.todo.length === 5 ? {todo: s.todo.map(Boolean), originality: s.originality ?? null}
-      : {todo: [false, false, false, false, false], originality: null};
+    state[it.number] = Object.assign(blankState(s && s.originality),
+      s && ['accept', 'review', 'close'].includes(s.decision) ? {decision: s.decision} : {}, s && typeof s.note === 'string' ? {note: s.note} : {});
   });
   if (m.hosted) {
     document.getElementById('nav').hidden = false;
@@ -709,7 +857,8 @@ function sortCards() {
     const rb = document.getElementById('resetTicks');
     rb.hidden = false;
     rb.addEventListener('click', () => {
-      DATA.items.forEach((it) => { state[it.number] = {todo: [false, false, false, false, false], originality: null}; });
+      if (!confirm('Clear every decision, comment and originality rating kept in this browser?')) return;
+      DATA.items.forEach((it) => { state[it.number] = blankState(null); });
       saveStore(); location.reload();
     });
   }
@@ -719,6 +868,9 @@ function sortCards() {
   document.getElementById('hideDone').addEventListener('change', applyFilters);
   document.getElementById('sort').addEventListener('change', sortCards);
   document.getElementById('aiFilter').addEventListener('change', applyFilters);
+  document.getElementById('pdfTop').addEventListener('click', generatePdf);
+  document.getElementById('pdfBottom').addEventListener('click', generatePdf);
+  updatePdfBar();
   sortCards();
   applyFilters();
   updateProgress();
