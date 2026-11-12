@@ -32,7 +32,11 @@ jobs:
           cache: pip
 
       - name: Install Python packages
-        run: pip install -r requirements.txt
+        # CPU-only PyTorch first (for hrothgar, the similar fonts): the default
+        # wheel brings ~3 GB of CUDA libraries the runner can't use.
+        run: |
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
 
       - name: Restore caches (QA results, profiles, previous run)
         uses: actions/cache@v4
