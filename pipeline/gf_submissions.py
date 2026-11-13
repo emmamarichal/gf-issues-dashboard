@@ -1259,6 +1259,15 @@ def engagement(comments, author):
 
 
 # ----------------------------------------------------------------- score & comment
+# Google Fonts defines glyphsets for these scripts only; the others are judged by language support
+GLYPHSET_SCRIPTS = ("Latn", "Cyrl", "Grek", "Arab")
+
+
+def other_scripts(f):
+    """Scripts with at least one supported language and no GF glyphset, e.g. ["Thai"]."""
+    return [s for s, n in (f.get("languages_by_script") or []) if n and s not in GLYPHSET_SCRIPTS]
+
+
 def score(rec):
     parts = []
     f = rec.get("fonts") or {}
@@ -1273,6 +1282,7 @@ def score(rec):
         if sets.get(k, 0) >= 99.9:
             cs += pts
     others = [k for k, v in sets.items() if v >= 99.9 and not k.startswith(("GF_Latin", "GF_TransLatin", "GF_Phonetics"))]
+    others += other_scripts(f)  # scripts Google Fonts has no glyphset for (Thai, Devanagari…)
     cs += min(6, 3 * len(others))
     langs = f.get("languages", 0)
     cs += min(5, 5 * math.log10(1 + langs) / math.log10(400)) if langs else 0
@@ -1362,13 +1372,14 @@ def proposal(rec):
     sets = {k: pct for k, pct, _ in f.get("glyphsets", [])}
     full = [k for k, v in sets.items() if v >= 99.9]
     non_latin = [k for k in full if not k.startswith(("GF_Latin", "GF_TransLatin", "GF_Phonetics"))]
+    non_latin += other_scripts(f)
     langs = f.get("languages", 0)
     latin_font = "Latn" in (f.get("scripts") or [])
     core_ok = "GF_Latin_Core" in full
     glyphs_ok = core_ok or (non_latin and not latin_font)
     extra = [k for k in full if k in ("GF_Latin_Plus", "GF_Latin_Vietnamese", "GF_Latin_African", "GF_Latin_Beyond")]
     glyphs_wide = glyphs_ok and (langs >= 350 or extra or (non_latin and core_ok))
-    shown = [k for k in full if k != "GF_Latin_Kernel" and "Historical" not in k]
+    shown = [k for k in full if k != "GF_Latin_Kernel" and "Historical" not in k] + other_scripts(f)
     shown.sort(key=lambda k: (k.startswith("GF_Latin"), k != "GF_Latin_Core", k))
     sets_txt = ", ".join(k.replace("GF_", "").replace("_", " ") for k in shown[:3]) or "no complete GF glyphset"
     if glyphs_wide:

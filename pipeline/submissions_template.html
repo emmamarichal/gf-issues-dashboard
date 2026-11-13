@@ -420,7 +420,15 @@ function charsetBox(it) {
   const b = el('div', {class: 'box'}, el('h3', {text: 'Character set'}));
   if (!f.glyphsets) return b.append(el('p', {class: 'small', text: 'No fonts analysed.'})), b;
   const full = f.glyphsets.filter((g) => g[1] >= 99.9), part = f.glyphsets.filter((g) => g[1] < 99.9 && g[1] >= 80);
-  b.append(el('div', {class: 'chips'}, full.length ? full.map((g) => chip(g[0].replace('GF_', '').replace(/_/g, ' '), 'good')) : chip('No complete GF glyphset', 'bad')));
+  // Google Fonts only defines glyphsets for Latin, Cyrillic, Greek and Arabic; the other
+  // scripts of the font are shown by the languages shaperglot finds supported in them
+  const withSet = ['Latn', 'Cyrl', 'Grek', 'Arab'];
+  const other = (f.languages_by_script || []).filter(([s, n]) => n > 0 && !withSet.includes(s));
+  b.append(el('div', {class: 'chips'},
+    full.length ? full.map((g) => chip(g[0].replace('GF_', '').replace(/_/g, ' '), 'good')) : (other.length ? [] : chip('No complete GF glyphset', 'bad')),
+    other.map(([s, n]) => chip(`${SCRIPT_NAME[s] || s} · ${n} language${n > 1 ? 's' : ''}`, 'good'))));
+  if (other.length) b.append(el('p', {class: 'small', text: `Google Fonts has no glyphset for ${other.map(([s]) => SCRIPT_NAME[s] || s).join(', ')}: ` +
+    'its support is measured by the languages shaperglot finds complete.'}));
   if (part.length) b.append(el('p', {class: 'small'}, 'Nearly complete: ' + part.map((g) => `${g[0].replace('GF_', '').replace(/_/g, ' ')} (${g[1]}%, ${g[2]} missing)`).join(', ')));
   if (f.latin_core_missing && f.latin_core_missing.length) b.append(el('p', {}, el('span', {class: 'no', text: 'Latin Core missing: '}), el('code', {text: f.latin_core_missing.join(' ')})));
   b.append(kv([
