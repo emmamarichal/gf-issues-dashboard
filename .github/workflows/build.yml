@@ -31,6 +31,11 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Install system libraries
+        # skia-python (used by hrothgar to render glyphs) links against libEGL and libGL,
+        # which the runner image doesn't ship.
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libegl1 libgl1
+
       - name: Install Python packages
         # CPU-only PyTorch first (for hrothgar, the similar fonts): the default
         # wheel brings ~3 GB of CUDA libraries the runner can't use.

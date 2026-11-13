@@ -6,15 +6,15 @@
 <title>Submissions to review</title>
 <style>
 :root{
-  --bg:#faf9f5;--panel:#ffffff;--ink:#1f1e1d;--muted:#6b6a65;--line:#e4e1d8;--soft:#f1efe8;
-  --accent:#2f6fde;--good:#1f7a4d;--warn:#a35a00;--bad:#b3261e;--chip:#eeece4;
+  --bg:#ffffff;--panel:#ffffff;--ink:#111111;--muted:#666666;--line:#e2e2e2;--soft:#f4f4f4;
+  --accent:#2f6fde;--good:#1f7a4d;--warn:#a35a00;--bad:#b3261e;--chip:#efefef;
   --font:system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#1c1b19;--panel:#262522;--ink:#f0eee6;--muted:#a8a69e;--line:#3b3a36;--soft:#2f2e2a;
-  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#34332f;}}
-:root[data-theme="dark"]{--bg:#1c1b19;--panel:#262522;--ink:#f0eee6;--muted:#a8a69e;--line:#3b3a36;--soft:#2f2e2a;
-  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#34332f;}
+  --bg:#161616;--panel:#1f1f1f;--ink:#f2f2f2;--muted:#a6a6a6;--line:#383838;--soft:#2a2a2a;
+  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#303030;}}
+:root[data-theme="dark"]{--bg:#161616;--panel:#1f1f1f;--ink:#f2f2f2;--muted:#a6a6a6;--line:#383838;--soft:#2a2a2a;
+  --accent:#7aa7ff;--good:#5cc28e;--warn:#e0a24a;--bad:#ff8a80;--chip:#303030;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
 a{color:var(--accent)}
@@ -49,7 +49,7 @@ h1{font-size:26px;font-weight:600;margin:0 0 4px}
 .chip{font-size:12px;background:var(--chip);border-radius:999px;padding:2px 9px;white-space:nowrap}
 .chip.good{color:var(--good)}.chip.warn{color:var(--warn)}.chip.bad{color:var(--bad)}
 .spec{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:hidden;background:#fff;color:#000}
-.spec,.proofs details{--ink:#000;--muted:#5f5e5a;--line:#dedcd5;--soft:#f2f2f2;--panel:#fff;--bg:#fff}
+.spec,.proofs details{--ink:#000;--muted:#666666;--line:#e2e2e2;--soft:#f2f2f2;--panel:#fff;--bg:#fff}
 .uf{font-family:var(--sf),var(--font);font-variation-settings:var(--fvs,normal)}
 .spec select{font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#000;max-width:260px}
 .sp .row{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:baseline;padding:2px 0}
@@ -64,9 +64,9 @@ h1{font-size:26px;font-weight:600;margin:0 0 4px}
 .spec .gridchars{font-size:22px;line-height:1.5;letter-spacing:.12em;word-break:break-all;margin-top:8px}
 .spec .nofont{font:13px var(--font);color:var(--muted)}
 .similar{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
-.similar .sample{--ink:#000;--line:#dedcd5;--panel:#fff;--muted:#5f5e5a;color:#000}
+.similar .sample{--ink:#000;--line:#e2e2e2;--panel:#fff;--muted:#666666;color:#000}
 .similar .sample a{color:#1a56c4}
-.similar .sample .chip{background:#f0efea;color:#5f5e5a;border-color:#dedcd5}
+.similar .sample .chip{background:#f2f2f2;color:#666666;border-color:#e2e2e2}
 .similar .sample .chip.warn{background:#fff4e0;color:#8a5300}
 .similar h3{margin:0 0 2px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .similar .samples{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr));gap:10px;margin-top:8px}
